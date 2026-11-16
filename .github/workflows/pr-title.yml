@@ -1,0 +1,37 @@
+name: PR title
+
+# La squash merge, titlul PR-ului devine commit-ul de pe main, iar release-please
+# îl citește ca să decidă versiunea și CHANGELOG-ul. De aceea trebuie să fie
+# Conventional Commits: `feat: …`, `fix(seo): …` etc., cu subiectul cu literă mică.
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint-title:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            chore
+            refactor
+            perf
+            test
+            ci
+            build
+            style
+            revert
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            Subiectul „{subject}” din titlul PR-ului trebuie să înceapă cu literă mică.

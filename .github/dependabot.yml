@@ -1,0 +1,36 @@
+# Actualizările automate ale dependențelor.
+#
+# O dată pe săptămână, Dependabot deschide PR-uri cu versiunile noi. Actualizările
+# minore și de patch vin strânse într-un singur PR; o versiune majoră vine separat,
+# fiindcă poate schimba API-ul și trebuie citită, nu doar unită.
+#
+# Remedierile de securitate nu depind de fișierul ăsta: vin din setările repo-ului,
+# imediat ce apare o vulnerabilitate.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # Limita implicită e 5. Cu PR-uri deschise la limită, Dependabot nu mai
+    # propune nimic până nu se închide unul, iar actualizările se opresc în tăcere.
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Tipurile lui Node urmează versiunea pe care rulăm. Tipuri mai noi ar lăsa
+      # codul să folosească funcții care nu există pe server fără ca typecheck-ul
+      # să le prindă.
+      - dependency-name: "@types/node"
+        versions: [">=25"]
+    commit-message:
+      prefix: "build"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "ci"

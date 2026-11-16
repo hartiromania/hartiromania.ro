@@ -1,0 +1,18 @@
+# pnpm 11 rulează scripturile de instalare doar pentru pachetele aprobate aici.
+# Niciunul nu are nevoie de ele: binarele native vin precompilate, ca dependențe
+# opționale. `false` le blochează explicit, ca instalarea să nu mai ceară aprobare.
+allowBuilds:
+  "@tailwindcss/oxide": false
+  esbuild: false
+  sharp: false
+  unrs-resolver: false
+
+# Versiuni reparate pentru pachete indirecte, pe care pachetul care le aduce le fixează
+# pe o versiune cu probleme de securitate. Se scot când pachetele părinte le urcă singure.
+overrides:
+  "js-yaml@3": "^3.15.2"
+  "smol-toml@1": "^1.9.1"
+  "esbuild@0.28": "^0.28.1"
+  "browserslist@4": "^4.29.5"
+  "minimatch@>=7 <11.0.1": "^11.0.1"
+  "uuid@<11.1.1": "^11.1.1"

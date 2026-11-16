@@ -1,0 +1,49 @@
+name: release-please
+
+# La fiecare merge pe main, release-please citește commit-urile noi și ține deschis
+# un PR de release cu versiunea următoare și CHANGELOG-ul actualizat. PR-ul se unește
+# singur după ce trece CI-ul, iar merge-ul lui pornește din nou workflow-ul ăsta,
+# care creează tag-ul și release-ul pe GitHub.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      # Ce face GITHUB_TOKEN nu pornește alte workflow-uri: CI-ul n-ar rula pe PR-ul de
+      # release, iar merge-ul lui n-ar crea release-ul. Aplicația organizației
+      # (hartiromania-release-bot) dă un token de scurtă durată care le pornește.
+      - name: Mint an app token
+        id: app-token
+        if: vars.RELEASE_APP_CLIENT_ID != ''
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+
+      # PR-ul de release schimbă doar versiunea și CHANGELOG-ul, deci se unește singur:
+      # auto-merge așteaptă CI-ul obligatoriu de pe main, apoi face squash.
+      - name: Merge the release pull request
+        if: steps.release.outputs.prs_created == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+          PRS: ${{ steps.release.outputs.prs }}
+        run: |
+          NUMBER=$(jq -r '.[0].number' <<< "$PRS")
+          echo "Release PR: #$NUMBER"
+          gh pr merge "$NUMBER" --squash --auto --repo "$GITHUB_REPOSITORY"
