@@ -2,6 +2,13 @@
 
 Versiunile urmează [Semantic Versioning](https://semver.org/lang/ro/): o funcționalitate nouă (`feat`) crește a doua cifră, o corectură (`fix`) pe a treia. Începând cu 1.8.4, fișierul e actualizat automat de release-please din titlurile PR-urilor.
 
+## [1.9.3](https://github.com/hartiromania/hartiromania.ro/compare/v1.9.2...v1.9.3) (2026-11-16)
+
+
+### Corecturi
+
+* **deps:** patched versions of vulnerable transitive dependencies ([#5](https://github.com/hartiromania/hartiromania.ro/issues/5)) ([b7d1642](https://github.com/hartiromania/hartiromania.ro/commit/b7d1642fe0d2da57fb1bad3ffe012c6272618b2a))
+
 ## 1.9.2 (2026-11-16)
 
 
