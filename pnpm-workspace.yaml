@@ -1,0 +1,8 @@
+# pnpm 11 rulează scripturile de instalare doar pentru pachetele aprobate aici.
+# Niciunul nu are nevoie de ele: binarele native vin precompilate, ca dependențe
+# opționale. `false` le blochează explicit, ca instalarea să nu mai ceară aprobare.
+allowBuilds:
+  "@tailwindcss/oxide": false
+  esbuild: false
+  sharp: false
+  unrs-resolver: false

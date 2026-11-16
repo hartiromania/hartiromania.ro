@@ -1,0 +1,47 @@
+name: release-please
+
+# La fiecare merge pe main, release-please citește commit-urile noi și ține deschis
+# un PR de release cu versiunea următoare și CHANGELOG-ul actualizat. Când PR-ul
+# acela intră pe main, se creează tag-ul și release-ul pe GitHub.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      # PR-ul de release se unește singur: auto-merge așteaptă verificările
+      # obligatorii; dacă nu sunt disponibile (repo privat, plan gratuit), se unește direct.
+      - name: Merge the release pull request
+        if: steps.release.outputs.prs_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRS: ${{ steps.release.outputs.prs }}
+        run: |
+          NUMBER=$(jq -r '.[0].number' <<< "$PRS")
+          echo "Release PR: #$NUMBER"
+          gh pr merge "$NUMBER" --squash --auto --repo "$GITHUB_REPOSITORY" \
+            || gh pr merge "$NUMBER" --squash --repo "$GITHUB_REPOSITORY"
+
+      # Un merge făcut cu GITHUB_TOKEN nu pornește alt workflow, deci release-please
+      # n-ar crea tag-ul și release-ul decât la următorul push pe main. Îl rulăm din
+      # nou aici, ca versiunea să apară pe GitHub imediat după merge.
+      - name: Tag the merged release
+        if: steps.release.outputs.prs_created == 'true'
+        uses: googleapis/release-please-action@v5
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

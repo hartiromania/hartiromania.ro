@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  pull_request:
+    # PR-ul de release schimbă doar versiunea și CHANGELOG-ul (fără cod de verificat),
+    # iar release-please îl unește imediat; CI-ul ar porni pe un branch deja șters.
+    # Un PR care atinge și alte fișiere (inclusiv pnpm-lock.yaml) rulează CI-ul normal.
+    paths-ignore:
+      - CHANGELOG.md
+      - .release-please-manifest.json
+      - package.json
+  push:
+    branches: [main]
+
+# Un push nou pe același branch anulează verificarea veche, care nu mai contează.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  # Singura verificare pe care o așteaptă un PR, deci trebuie să rămână rapidă.
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      # corepack citește versiunea de pnpm din câmpul packageManager din package.json.
+      - run: corepack enable
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+
+      - run: pnpm format:check
+
+      - run: pnpm typecheck
+
+      - run: pnpm build

@@ -1,0 +1,299 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated to vintage cream-brown color palette like old maps */
+  --background: #faf7f2;
+  --foreground: #3d2914;
+  --card: #f5f1e8;
+  --card-foreground: #5d4037;
+  --popover: #faf7f2;
+  --popover-foreground: #3d2914;
+  --primary: #7d6056; /* #8d6e63 avea 4,3:1 cu textul crem */
+  --primary-foreground: #faf7f2;
+  --secondary: #a1887f;
+  --secondary-foreground: #faf7f2;
+  --muted: #efebe2;
+  --muted-foreground: #6d4c41;
+  --accent: #d7ccc8;
+  --accent-foreground: #3d2914;
+  --destructive: #d32f2f;
+  --destructive-foreground: #faf7f2;
+  --border: #bcaaa4;
+  --input: #faf7f2;
+  --ring: #8d6e63;
+
+  /* Added orange-brown accent colors for vintage map feel */
+  /* #a0501a: contrast AA (≥4,5:1) cu textul crem și pe fundalurile bej; #b8621b avea 4,1:1. */
+  --orange-accent: #a0501a;
+  --orange-accent-foreground: #faf7f2;
+  --orange-muted: #d2691e;
+  --orange-dark: #8b4513;
+  --orange-light: #deb887;
+
+  --chart-1: #d7ccc8;
+  --chart-2: #bcaaa4;
+  --chart-3: #a1887f;
+  --chart-4: #8d6e63;
+  --chart-5: #795548;
+  --radius: 0.5rem;
+  --sidebar: #faf7f2;
+  --sidebar-foreground: #3d2914;
+  --sidebar-primary: #d7ccc8;
+  --sidebar-primary-foreground: #3d2914;
+  --sidebar-accent: #8d6e63;
+  --sidebar-accent-foreground: #faf7f2;
+  --sidebar-border: #bcaaa4;
+  --sidebar-ring: #8d6e63;
+}
+
+.dark {
+  /* Updated dark mode to maintain vintage brown theme */
+  --background: #2e1a0f;
+  --foreground: #f5f1e8;
+  --card: #3d2914;
+  --card-foreground: #f5f1e8;
+  --popover: #3d2914;
+  --popover-foreground: #f5f1e8;
+  --primary: #a1887f;
+  --primary-foreground: #2e1a0f;
+  --secondary: #6d4c41;
+  --secondary-foreground: #f5f1e8;
+  --muted: #5d4037;
+  --muted-foreground: #bcaaa4;
+  --accent: #5d4037;
+  --accent-foreground: #f5f1e8;
+  --destructive: #ef5350;
+  --destructive-foreground: #faf7f2;
+  --border: #5d4037;
+  --input: #5d4037;
+  --ring: #a1887f;
+
+  /* Added dark mode orange accent colors */
+  --orange-accent: #d2691e;
+  --orange-accent-foreground: #2e1a0f;
+  --orange-muted: #b8621b;
+  --orange-dark: #8b4513;
+  --orange-light: #cd853f;
+
+  --chart-1: #8d6e63;
+  --chart-2: #a1887f;
+  --chart-3: #bcaaa4;
+  --chart-4: #d7ccc8;
+  --chart-5: #efebe2;
+  --sidebar: #2e1a0f;
+  --sidebar-foreground: #f5f1e8;
+  --sidebar-primary: #a1887f;
+  --sidebar-primary-foreground: #2e1a0f;
+  --sidebar-accent: #5d4037;
+  --sidebar-accent-foreground: #f5f1e8;
+  --sidebar-border: #5d4037;
+  --sidebar-ring: #a1887f;
+}
+
+@theme inline {
+  /* Updated to use classic serif fonts instead of modern sans-serif */
+  --font-serif: var(--font-playfair-display);
+  --font-sans: var(--font-crimson-text);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Added orange accent color variables to theme for Tailwind compatibility */
+  --color-accent-orange: var(--orange-accent);
+  --color-accent-orange-foreground: var(--orange-accent-foreground);
+  --color-accent-orange-muted: var(--orange-muted);
+  --color-accent-orange-dark: var(--orange-dark);
+  --color-accent-orange-light: var(--orange-light);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    /* Updated to use serif font for classic appearance and increased base font size */
+    @apply bg-background text-foreground font-sans text-lg;
+  }
+
+  /* Added larger font sizes for better readability */
+  p {
+    @apply text-lg leading-relaxed;
+    /* Evită un cuvânt rămas singur pe ultimul rând. */
+    text-wrap: pretty;
+  }
+
+  /* Titlurile pe mai multe rânduri se împart în rânduri de lungimi apropiate. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  /* Textul justificat: rânduri de cel mult ~75 de caractere (lizibilitate) și despărțire
+     în silabe după regulile limbii române (lang="ro"), ca să nu apară goluri mari între
+     cuvinte. */
+  p.text-justify,
+  .text-justify p {
+    max-width: 62ch;
+    margin-inline: auto;
+  }
+
+  .text-justify {
+    hyphens: auto;
+  }
+
+  /* Focus vizibil pentru navigarea din tastatură pe linkuri (butoanele au inelul lor). */
+  a:focus-visible {
+    outline: 2px solid var(--orange-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  /* Increased navigation and button text sizes */
+  nav a {
+    @apply text-lg;
+  }
+
+  button {
+    @apply text-lg;
+  }
+
+  img {
+  }
+}
+
+/* Added custom utility classes for orange accent colors */
+@layer utilities {
+  .content-protected * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .content-protected img {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+  }
+
+  .bg-accent-orange {
+    background-color: var(--orange-accent);
+  }
+
+  .text-accent-orange {
+    color: var(--orange-accent);
+  }
+
+  .text-accent-orange-foreground {
+    color: var(--orange-accent-foreground);
+  }
+
+  .bg-accent-orange-dark {
+    background-color: var(--orange-dark);
+  }
+
+  .hover\:bg-accent-orange-dark:hover {
+    background-color: var(--orange-dark);
+  }
+
+  /* Added CSS rules for blog text zoom functionality */
+  .blog-content-zoom {
+    font-size: inherit;
+  }
+
+  .blog-content-zoom * {
+    font-size: inherit !important;
+  }
+
+  .blog-content-zoom p,
+  .blog-content-zoom li,
+  .blog-content-zoom span,
+  .blog-content-zoom div {
+    font-size: inherit !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Added blue underlined link styles for blog content */
+  .blog-content-zoom a {
+    color: var(--primary) !important;
+    text-decoration: underline !important;
+  }
+
+  .blog-content-zoom a:hover {
+    opacity: 0.8;
+  }
+
+  .blog-content-zoom h1 {
+    font-size: calc(2.5em * var(--font-scale, 1)) !important;
+  }
+
+  .blog-content-zoom h2 {
+    font-size: calc(2em * var(--font-scale, 1)) !important;
+  }
+
+  .blog-content-zoom h3 {
+    font-size: calc(1.75em * var(--font-scale, 1)) !important;
+  }
+
+  .blog-content-zoom h4 {
+    font-size: calc(1.5em * var(--font-scale, 1)) !important;
+  }
+}
