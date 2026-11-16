@@ -94,8 +94,9 @@
 
 - **Conventional Commits, în engleză, subiect cu literă mică**: `feat: add product sitemap`, `fix(seo): canonical url on blog posts`. Verificat de `.github/workflows/pr-title.yml`.
 - Tipuri: `feat` (versiune minoră), `fix` (patch), `perf`, `refactor`, `docs`, `chore`, `ci`, `build`, `style`, `test`, `revert`.
-- **Descrierea PR-ului în română**, pe șablonul din `.github/PULL_REQUEST_TEMPLATE.md` (Ce schimbă / De ce / Verificare); la „Verificare” scrii ce ai rulat efectiv și rezultatul.
-- Textul public (PR, commit, README) descrie doar ce s-a implementat și cu ce tehnologie, fără intenții sau ce lipsește. Squash commit-ul păstrează descrierea pentru totdeauna.
+- **Descrierea PR-ului în română, scurtă**, pe șablonul din `.github/PULL_REQUEST_TEMPLATE.md`: „Ce schimbă” în 1–2 propoziții, apoi bifele de la „Verificare”.
+- **Repo-ul e public.** Descrierile de PR, mesajele de commit, notele de release, README-ul și comentariile din cod nu conțin date sensibile (conturi, adrese de email personale, ID-uri de liste sau de servicii, nume sau valori de secrete, căi locale, date despre owner) și nici pași sau explicații despre cum am lucrat. Detaliile operaționale stau doar în `CLAUDE.local.md`; instrucțiunile pentru owner se dau în chat.
+- La squash merge, commit-ul de pe `main` primește doar titlul PR-ului (setarea repo-ului), deci descrierea nu intră în istoric.
 - **Fără atribuire AI**: niciun `Co-Authored-By` și niciun footer „Generated with” în commit-uri sau PR-uri.
 
 ### CI (GitHub Actions)
