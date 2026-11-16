@@ -1,14 +1,9 @@
 name: CI
 
 on:
+  # Pe fiecare PR, inclusiv pe cel de release: regula de pe main cere `check` verde
+  # înainte de orice merge.
   pull_request:
-    # PR-ul de release schimbă doar versiunea și CHANGELOG-ul (fără cod de verificat),
-    # iar release-please îl unește imediat; CI-ul ar porni pe un branch deja șters.
-    # Un PR care atinge și alte fișiere (inclusiv pnpm-lock.yaml) rulează CI-ul normal.
-    paths-ignore:
-      - CHANGELOG.md
-      - .release-please-manifest.json
-      - package.json
   push:
     branches: [main]
 
