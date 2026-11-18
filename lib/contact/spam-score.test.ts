@@ -45,6 +45,20 @@ test("keyboard mashing is suspect even when Turnstile passes", () => {
   assert.equal(result.verdict, "suspect", `score ${result.score}: ${result.reasons.join("; ")}`);
 });
 
+const gibberish: ContactInput[] = [
+  { name: "John", email: "andrei@iancu.com", subject: "Test xjj", message: "svjbsd sdsb sdg" },
+  { name: "Maria", email: "maria@gmail.com", subject: "hello", message: "qwpo zxkq mnbv trwq" },
+  { name: "dfgdfg", email: "dfg@yahoo.com", subject: "fghfgh", message: "jkljkl hjkhjk" },
+  { name: "Ana", email: "ana@gmail.com", subject: "Info", message: "ghj" },
+];
+
+for (const input of gibberish) {
+  test(`gibberish is suspect: "${input.message}"`, () => {
+    const result = check(input);
+    assert.equal(result.verdict, "suspect", `score ${result.score}: ${result.reasons.join("; ")}`);
+  });
+}
+
 test("SEO pitch with a link is suspect", () => {
   const result = check({
     name: "Mike",
@@ -112,6 +126,25 @@ const humans: ContactInput[] = [
   },
   { name: "Elena", email: "elena@gmail.com", subject: "Mulțumesc", message: "ok mersi" },
   {
+    name: "Wojciech Szczepański",
+    email: "wojtek@wp.pl",
+    subject: "Order",
+    message:
+      "Hello, I would like to buy the big historical map of Romania. Is shipping to Poland possible?",
+  },
+  {
+    name: "Gheorghe",
+    email: "ghita.vasile@yahoo.com",
+    subject: "harta",
+    message: "buna seara as vrea harta cu judetele vechi pt bunicul meu, cat costa cu transport?",
+  },
+  {
+    name: "Cristina",
+    email: "cristina@srl-design.ro",
+    subject: "Factură SRL",
+    message: "Bună, putem primi factură pe firmă? CUI RO123456, SRL din Iași.",
+  },
+  {
     name: "Mihai Ionescu",
     email: "mihai@firma.ro",
     subject: "Colaborare",
@@ -141,3 +174,37 @@ test("every point added comes with a reason", () => {
   });
   assert.ok(result.reasons.length >= 3);
 });
+
+// Broad sample: real messages in several languages and lengths, and typed nonsense.
+const signals = humanSignals;
+const realMessages = [
+  "Salut",
+  "Preț?",
+  "Aveți harta Daciei?",
+  "pls call me 0745123456",
+  "Guten Tag, ich möchte eine Karte bestellen",
+  "Jó napot, szeretnék egy térképet rendelni",
+  "Buongiorno, vorrei comprare la mappa",
+  "cand ajunge comanda mea nr 1234?",
+  "Doresc factura pe PFA",
+];
+const nonsense = [
+  "asdasd",
+  "qweqwe",
+  "lkjlkj ewrwer",
+  "dsfgsdfgsdfg",
+  "Hello sdfsdf jhgjhg",
+  "zzzzzz",
+];
+const base = { name: "Ion", email: "ion@gmail.com", subject: "Mesaj" };
+
+for (const message of realMessages) {
+  test(`real message stays ok: "${message}"`, () => {
+    assert.equal(analyzeMessage({ ...base, message }, signals).verdict, "ok");
+  });
+}
+for (const message of nonsense) {
+  test(`nonsense is suspect: "${message}"`, () => {
+    assert.equal(analyzeMessage({ ...base, message }, signals).verdict, "suspect");
+  });
+}

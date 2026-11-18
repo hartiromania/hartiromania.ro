@@ -6,7 +6,13 @@
 // SUSPECT_FROM points or more the message is marked suspect. Nothing is thrown away:
 // the caller still delivers suspect messages, only labelled.
 //
-// Pure function with no imports, so it runs both in Next and under `node --test`.
+// The core is a letter model trained on the site's own texts (blog + products) and some
+// English (scripts/language-model/train.mjs): it knows which letter tends to follow which
+// in real words, so it recognises random text in any shape, not only known patterns.
+//
+// Pure function, runs both in Next and under `node --test`.
+
+import model from "./language-model.json" with { type: "json" };
 
 export interface ContactInput {
   name: string;
@@ -77,30 +83,44 @@ function words(text: string): string[] {
   return plain(text).match(/[\p{L}]+/gu) ?? [];
 }
 
-// A single token that no person would type: case flipping inside the word
-// ("sTnpUimWcKq") or a long run of letters with almost no vowels ("kjhdsfkjh").
-// Letters hit by sliding a hand along one keyboard row ("sfasfa", "sdfsfsdf"). Only the
-// middle and bottom rows: the top row holds most vowels, so real words fit in it.
-function isKeyboardMash(word: string): boolean {
-  return word.length >= 5 && !COMMON_WORDS.has(word) && /^([asdfghjkl]+|[zxcvbnm]+)$/.test(word);
+/** Average log-probability of the word's letter pairs under the trained model. */
+function languageScore(word: string): number {
+  const chars = `^${word}$`;
+  let sum = 0;
+  for (let i = 0; i < chars.length - 1; i++) {
+    const from = model.alphabet.indexOf(chars[i]);
+    const to = model.alphabet.indexOf(chars[i + 1]);
+    sum += from < 0 || to < 0 ? -8 : model.logp[from][to];
+  }
+  return sum / (chars.length - 1);
 }
 
+// Letters hit by sliding a hand along one keyboard row ("sfasfa"): such strings can look
+// pronounceable to the letter model, so they get their own check. Only the middle and
+// bottom rows; the top row holds most vowels and real words fit in it.
+function isKeyboardMash(word: string): boolean {
+  return word.length >= 5 && /^([asdfghjkl]+|[zxcvbnm]+)$/.test(word);
+}
+
+/** True for a token no person would type as a word. Short words (1-2 letters) are never judged. */
 function isGibberishToken(token: string): boolean {
   const letters = token.replace(/[^\p{L}]/gu, "");
-  if (isKeyboardMash(plain(letters))) return true;
-  if (letters.length < 7) return false;
+  const word = plain(letters);
+  if (word.length < 3 || COMMON_WORDS.has(word) || !/^[a-z]+$/.test(word)) return false;
   const caseFlips = (letters.slice(1).match(/(?<=\p{Ll})\p{Lu}/gu) ?? []).length;
-  if (caseFlips >= 3) return true;
-  const vowels = (plain(letters).match(/[aeiouy]/g) ?? []).length;
-  if (vowels / letters.length < 0.15) return true;
-  return /[bcdfghjklmnpqrstvwxz]{6,}/i.test(plain(letters));
+  return caseFlips >= 3 || isKeyboardMash(word) || languageScore(word) < model.threshold;
 }
 
+/** Most of the text (by letters) is made of non-words. */
 function isGibberishText(text: string): boolean {
-  const longTokens = text.split(/\s+/).filter((t) => t.replace(/[^\p{L}]/gu, "").length >= 5);
-  if (longTokens.length === 0) return false;
-  const bad = longTokens.filter(isGibberishToken).length;
-  return bad / longTokens.length >= 0.5;
+  const tokens = text
+    .split(/[\s,.;:!?()"'„”-]+/)
+    .filter((t) => t.replace(/[^\p{L}]/gu, "").length >= 3);
+  if (tokens.length === 0) return false;
+  const length = (t: string) => t.replace(/[^\p{L}]/gu, "").length;
+  const total = tokens.reduce((n, t) => n + length(t), 0);
+  const bad = tokens.filter(isGibberishToken).reduce((n, t) => n + length(t), 0);
+  return bad / total >= 0.5;
 }
 
 export function analyzeMessage(input: ContactInput, signals: BotSignals): Analysis {
@@ -120,7 +140,6 @@ export function analyzeMessage(input: ContactInput, signals: BotSignals): Analys
   else if (signals.elapsedMs < 3000) add(35, "formular completat în sub 3 secunde");
   if (signals.turnstile === "failed") add(40, "verificarea anti-bot Cloudflare a eșuat");
   if (signals.turnstile === "missing") add(30, "lipsește verificarea anti-bot Cloudflare");
-  if (signals.turnstile === "passed") add(-10, "verificarea anti-bot Cloudflare a trecut");
   if (signals.emailDomain === "invalid") add(40, "domeniul emailului nu primește emailuri");
   if (signals.emailDomain === "disposable") add(30, "adresă de email de unică folosință");
 
@@ -134,7 +153,8 @@ export function analyzeMessage(input: ContactInput, signals: BotSignals): Analys
 
   // --- The text itself ---
   if (isGibberishText(subject)) add(25, "subiectul pare generat aleator");
-  if (isGibberishText(message)) add(40, "mesajul pare generat aleator");
+  const nonsense = isGibberishText(message);
+  if (nonsense) add(55, "mesajul nu conține cuvinte reale");
 
   const spamHits = SPAM_PATTERNS.filter((p) => p.test(all)).length;
   if (spamHits > 0) {
@@ -145,7 +165,8 @@ export function analyzeMessage(input: ContactInput, signals: BotSignals): Analys
   const links = message.match(URL_PATTERN) ?? [];
   const withoutLinks = message.replace(/\S*(https?:\/\/|www\.)\S*/gi, "").trim();
   if (/\[url=|<a\s+href/i.test(message)) add(40, "linkuri ascunse în cod (BBCode/HTML)");
-  if (links.length > 0 && withoutLinks.length < 20) add(40, "mesajul e aproape doar linkuri");
+  const onlyLinks = links.length > 0 && withoutLinks.length < 20;
+  if (onlyLinks) add(55, "mesajul e aproape doar linkuri");
   else if (links.length >= 2) add(30, `${links.length} linkuri în mesaj`);
   else if (links.length === 1) add(10, "un link în mesaj");
 
@@ -171,8 +192,12 @@ export function analyzeMessage(input: ContactInput, signals: BotSignals): Analys
   const same = (a: string, b: string) => a.trim().length > 3 && plain(a).trim() === plain(b).trim();
   if (same(name, subject) || same(subject, message)) add(15, "câmpuri identice între ele");
 
-  // --- Signs of a real person: only when no trap was hit and the text is not a pitch ---
-  if (!signals.honeypot && spamHits === 0 && links.length === 0) {
+  // --- Signs of a real person: only when no trap was hit and the message says something.
+  // A person can pass Cloudflare and still type nonsense, so the bonuses need real content.
+  if (!signals.honeypot && !nonsense && !onlyLinks && spamHits === 0) {
+    if (signals.turnstile === "passed") add(-10, "verificarea anti-bot Cloudflare a trecut");
+  }
+  if (!signals.honeypot && !nonsense && spamHits === 0 && links.length === 0) {
     if (knowsLanguage) add(-10, "folosește cuvinte uzuale dintr-o limbă reală");
     if (/[ăâîșțşţ]/i.test(all)) add(-10, "folosește diacritice românești");
   }
