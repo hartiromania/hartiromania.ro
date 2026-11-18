@@ -97,13 +97,16 @@ export async function overLimit(
   key: string,
   limit: number,
   windowSeconds: number,
+  /** false = only check the current count, without adding this hit. */
+  count = true,
 ): Promise<boolean> {
   const kv = redis();
   if (!kv) return false;
   try {
-    const count = await kv.incr(key);
-    if (count === 1) await kv.expire(key, windowSeconds);
-    return count > limit;
+    if (!count) return Number((await kv.get<number>(key)) ?? 0) >= limit;
+    const hits = await kv.incr(key);
+    if (hits === 1) await kv.expire(key, windowSeconds);
+    return hits > limit;
   } catch {
     return false;
   }

@@ -42,7 +42,10 @@ export async function requestAccess(_: LoginState, form: FormData): Promise<Logi
     String(form.get("cf-turnstile-response") ?? "") || undefined,
     ip ?? undefined,
   );
-  if (turnstile === "failed" || turnstile === "missing") {
+  // Fail closed: when Turnstile is configured, only a passed check gets through (a Cloudflare
+  // outage blocks sign-in rather than letting bots in). Without keys (local dev) it is skipped.
+  const required = Boolean(process.env.TURNSTILE_SECRET_KEY);
+  if (required ? turnstile !== "passed" : turnstile === "failed") {
     return {
       step: "email",
       error: "Verificarea de securitate a eșuat. Reîncarcă pagina și încearcă din nou.",
@@ -91,8 +94,14 @@ export async function verifyCode(_: LoginState, form: FormData): Promise<LoginSt
   const code = String(form.get("code") ?? "").replace(/\D/g, "");
   if (code.length !== 6) return { step: "code", error: "Cod invalid." };
 
+  // Across all IPs: after 20 wrong codes in a day, codes stop working until tomorrow.
+  if (await overLimit("admin:code:wrong-today", 20, 24 * 60 * 60, false)) {
+    return { step: "code", error: TOO_MANY };
+  }
+
   const result = await consumeCode(code);
   if (result === "wrong") {
+    await overLimit("admin:code:wrong-today", 20, 24 * 60 * 60);
     await audit("login.code_wrong");
     return { step: "code", error: "Cod invalid." };
   }
