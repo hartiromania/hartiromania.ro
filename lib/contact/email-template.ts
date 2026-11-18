@@ -14,6 +14,7 @@ const INK = "#18181b";
 const MUTED = "#71717a";
 const OK = { bg: "#ecfdf5", ink: "#047857" };
 const WARN = { bg: "#fef2f2", ink: "#b91c1c" };
+const PLACE = { bg: "#eff6ff", ink: "#1d4ed8" };
 
 export interface ContactEmailData {
   input: ContactInput;
@@ -43,13 +44,6 @@ export function formatRoDate(date: Date): string {
   }).format(date);
 }
 
-const DOMAIN_LABEL: Record<BotSignals["emailDomain"], string> = {
-  ok: "✓ domeniu valid, primește emailuri",
-  invalid: "✗ domeniul nu primește emailuri",
-  disposable: "✗ adresă de unică folosință",
-  unknown: "? nu s-a putut verifica",
-};
-
 const TURNSTILE_LABEL: Record<BotSignals["turnstile"], string> = {
   passed: "✓ trecută",
   failed: "✗ eșuată",
@@ -62,6 +56,25 @@ export function contactEmailSubject({ input, analysis }: ContactEmailData): stri
   return `${prefix}Mesaj de la ${input.name}: ${input.subject}`.slice(0, 200);
 }
 
+// "Răspunde" opens a new email to the sender with their subject and message quoted, so the
+// reply does not carry this whole notification along (as the mail client's Reply would).
+function replyMailto({ input, receivedAt }: ContactEmailData): string {
+  const quoted = input.message
+    .split("\n")
+    .map((line) => `> ${line}`)
+    .join("\n");
+  const body = [
+    "",
+    "",
+    "",
+    `Pe ${formatRoDate(receivedAt)}, ${input.name} a scris:`,
+    `> Subiect: „${input.subject}”`,
+    ">",
+    quoted,
+  ].join("\n");
+  return `mailto:${encodeURIComponent(input.email)}?subject=${encodeURIComponent(`Re: ${input.subject}`)}&body=${encodeURIComponent(body)}`;
+}
+
 export function contactEmailHtml(data: ContactEmailData): string {
   const { input, analysis, signals } = data;
   const suspect = analysis.verdict === "suspect";
@@ -70,7 +83,7 @@ export function contactEmailHtml(data: ContactEmailData): string {
   const email = escapeHtml(input.email);
   const subject = escapeHtml(input.subject);
   const message = escapeHtml(input.message).replace(/\n/g, "<br>");
-  const replyHref = `mailto:${encodeURIComponent(input.email)}?subject=${encodeURIComponent(`Re: ${input.subject}`)}`;
+  const replyHref = replyMailto(data);
   const label = `font-family:${SANS};font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${MUTED};`;
 
   const row = (key: string, value: string, mono = false) => `
@@ -79,25 +92,11 @@ export function contactEmailHtml(data: ContactEmailData): string {
       <td style="padding:10px 0;border-top:1px solid ${LINE};font-family:${mono ? MONO : SANS};font-size:13px;line-height:1.5;color:${INK};">${value}</td>
     </tr>`;
 
-  const reasons = analysis.reasons.filter((r) => r.startsWith("+"));
-  const flags = suspect
-    ? `
-        <tr><td style="padding:0 32px 24px;">
-          <div style="background:${WARN.bg};border-radius:8px;padding:14px 16px;">
-            <div style="${label}color:${WARN.ink};padding-bottom:6px;">De ce pare spam</div>
-            ${reasons
-              .map(
-                (r) =>
-                  `<div style="font-family:${MONO};font-size:12px;line-height:1.7;color:${WARN.ink};">${escapeHtml(r)}</div>`,
-              )
-              .join("")}
-          </div>
-        </td></tr>`
-    : "";
-
-  const location = `${escapeHtml(data.location)}${
-    data.mapUrl ? ` · <a href="${escapeHtml(data.mapUrl)}" style="color:${INK};">hartă</a>` : ""
-  }<div style="font-size:12px;color:${MUTED};">aproximativă, după adresa IP</div>`;
+  const chip = (text: string, colors: { bg: string; ink: string }) =>
+    `<span style="display:inline-block;background:${colors.bg};color:${colors.ink};font-weight:600;padding:2px 8px;border-radius:6px;">${text}</span>`;
+  const location = `${chip(escapeHtml(data.location), PLACE)}${
+    data.mapUrl ? ` <a href="${escapeHtml(data.mapUrl)}" style="color:${INK};">hartă</a>` : ""
+  }<div style="font-size:12px;color:${MUTED};padding-top:4px;">aproximativă, după adresa IP</div>`;
 
   return `<!doctype html>
 <html lang="ro">
@@ -124,7 +123,6 @@ export function contactEmailHtml(data: ContactEmailData): string {
               <h1 style="margin:16px 0 6px;font-family:${SANS};font-size:22px;line-height:1.3;font-weight:600;letter-spacing:-0.01em;color:${INK};">${subject}</h1>
               <div style="font-family:${SANS};font-size:14px;color:${MUTED};">${name} · <a href="mailto:${email}" style="color:${INK};">${email}</a></div>
             </td></tr>
-            ${flags}
             <tr><td style="padding:0 32px 24px;">
               <div style="font-family:${SANS};font-size:15px;line-height:1.65;color:${INK};border-left:2px solid ${INK};padding:2px 0 2px 16px;">${message}</div>
             </td></tr>
@@ -137,15 +135,14 @@ export function contactEmailHtml(data: ContactEmailData): string {
                 ${row("Locație", location)}
                 ${row("IP", escapeHtml(data.ip), true)}
                 ${row("Dispozitiv", escapeHtml(data.device))}
-                ${row("Email", DOMAIN_LABEL[signals.emailDomain])}
                 ${row("Anti-bot", TURNSTILE_LABEL[signals.turnstile])}
-                ${row("Scor", `${analysis.score}/100 · prag ${SUSPECT_FROM}`, true)}
+                ${row("Scor", `${chip(`${analysis.score}/100`, tone)} <span style="color:${MUTED};">prag ${SUSPECT_FROM}</span>`, true)}
               </table>
             </td></tr>
           </table>
         </td></tr>
         <tr><td style="padding:16px 4px 0;font-family:${SANS};font-size:12px;line-height:1.5;color:${MUTED};">
-          Trimis automat din formularul de contact hartiromania.ro. „Reply” răspunde direct expeditorului.
+          Trimis automat din formularul de contact hartiromania.ro. „Răspunde” deschide un email nou către expeditor, cu mesajul lui citat.
         </td></tr>
       </table>
     </td></tr>
@@ -167,7 +164,6 @@ export function contactEmailText(data: ContactEmailData): string {
     `Locație: ${data.location} (aproximativă, după IP)${data.mapUrl ? ` ${data.mapUrl}` : ""}`,
     `Adresă IP: ${data.ip}`,
     `Dispozitiv: ${data.device}`,
-    `Email: ${DOMAIN_LABEL[signals.emailDomain]}`,
     `Anti-bot: ${TURNSTILE_LABEL[signals.turnstile]}`,
     `Scor spam: ${analysis.score}/100`,
   ].join("\n");
