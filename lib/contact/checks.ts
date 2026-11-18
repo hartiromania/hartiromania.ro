@@ -1,17 +1,17 @@
 // Server-side checks for the contact form: Cloudflare Turnstile, the email domain,
-// a per-IP rate limit and a short history of received messages (for the admin panel).
+// rate limits and the stored copy of every message (for the admin panel).
 // Every check degrades gracefully: a missing key or a slow network never blocks a real person.
 import "server-only";
 
 import { resolve4, resolveMx } from "node:dns/promises";
 import { Redis } from "@upstash/redis";
 
+import { db, schema } from "@/lib/db";
+
 import type { BotSignals } from "./spam-score";
 
 const RATE_LIMIT = 5;
 const RATE_WINDOW_SECONDS = 600;
-const HISTORY_KEY = "contact:messages";
-const HISTORY_SIZE = 500;
 
 // The most common throwaway-inbox services. Not exhaustive on purpose: the content
 // analysis catches the rest.
@@ -89,13 +89,24 @@ export async function checkEmailDomain(email: string): Promise<BotSignals["email
 
 /** True when this IP has already sent RATE_LIMIT messages in the current window. */
 export async function isRateLimited(ip: string | undefined): Promise<boolean> {
-  const db = redis();
-  if (!db || !ip) return false;
+  return ip ? overLimit(`contact:rate:${ip}`, RATE_LIMIT, RATE_WINDOW_SECONDS) : false;
+}
+
+/** Counts one hit for `key`; true once it exceeds `limit` within `windowSeconds`. */
+export async function overLimit(
+  key: string,
+  limit: number,
+  windowSeconds: number,
+  /** false = only check the current count, without adding this hit. */
+  count = true,
+): Promise<boolean> {
+  const kv = redis();
+  if (!kv) return false;
   try {
-    const key = `contact:rate:${ip}`;
-    const count = await db.incr(key);
-    if (count === 1) await db.expire(key, RATE_WINDOW_SECONDS);
-    return count > RATE_LIMIT;
+    if (!count) return Number((await kv.get<number>(key)) ?? 0) >= limit;
+    const hits = await kv.incr(key);
+    if (hits === 1) await kv.expire(key, windowSeconds);
+    return hits > limit;
   } catch {
     return false;
   }
@@ -116,13 +127,16 @@ export interface StoredMessage {
   emailed: boolean;
 }
 
-/** Keeps the latest messages so the admin panel can list them (moved to the database later). */
+/** Keeps every message (spam included) for the admin panel. Never blocks the reply. */
 export async function storeMessage(record: StoredMessage): Promise<void> {
-  const db = redis();
-  if (!db) return;
   try {
-    await db.lpush(HISTORY_KEY, JSON.stringify(record));
-    await db.ltrim(HISTORY_KEY, 0, HISTORY_SIZE - 1);
+    await db()
+      .insert(schema.contactMessages)
+      .values({
+        ...record,
+        receivedAt: new Date(record.receivedAt),
+        ip: record.ip === "necunoscut" ? null : record.ip,
+      });
   } catch (error) {
     console.error("[contact] could not store message", error);
   }

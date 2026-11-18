@@ -3,7 +3,6 @@
 import type React from "react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import Script from "next/script";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Facebook, Instagram, Twitter } from "@/components/brand-icons";
+import { Turnstile, type TurnstileHandle } from "@/components/turnstile";
 
 const TelegramIcon = ({ className }: { className?: string }) => (
   <svg
@@ -23,26 +23,6 @@ const TelegramIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-
-declare global {
-  interface Window {
-    turnstile?: {
-      render: (
-        container: HTMLElement,
-        options: {
-          sitekey: string;
-          appearance?: "always" | "execute" | "interaction-only";
-          language?: string;
-          "error-callback"?: (code: string) => boolean;
-        },
-      ) => string | undefined;
-      reset: (widgetId: string) => void;
-      remove: (widgetId: string) => void;
-    };
-  }
-}
-
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -54,27 +34,12 @@ export default function ContactPage() {
   const [isLoading, setIsLoading] = useState(false);
   // Anti-spam signals: when the form appeared and the Cloudflare Turnstile widget.
   const startedAt = useRef<number | null>(null);
-  const turnstileBox = useRef<HTMLDivElement>(null);
-  const turnstileId = useRef<string | undefined>(undefined);
+  const turnstile = useRef<TurnstileHandle>(null);
 
   useEffect(() => {
     startedAt.current = Date.now();
-    return () => {
-      if (turnstileId.current) window.turnstile?.remove(turnstileId.current);
-    };
   }, []);
 
-  const renderTurnstile = () => {
-    if (!TURNSTILE_SITE_KEY || !turnstileBox.current || turnstileId.current) return;
-    turnstileId.current = window.turnstile?.render(turnstileBox.current, {
-      sitekey: TURNSTILE_SITE_KEY,
-      appearance: "interaction-only",
-      language: "ro",
-      // A failed check must not break the page: the message is still sent, and the
-      // server counts the missing token in the spam score.
-      "error-callback": () => true,
-    });
-  };
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error" | null;
     message: string;
@@ -128,7 +93,7 @@ export default function ContactPage() {
     } finally {
       setIsLoading(false);
       // A Turnstile token works once; get a fresh one for a possible next message.
-      if (turnstileId.current) window.turnstile?.reset(turnstileId.current);
+      turnstile.current?.reset();
     }
   };
 
@@ -141,13 +106,6 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen">
-      {TURNSTILE_SITE_KEY && (
-        <Script
-          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-          strategy="afterInteractive"
-          onReady={renderTurnstile}
-        />
-      )}
       <Header />
 
       {/* Hero Section */}
@@ -286,7 +244,7 @@ export default function ContactPage() {
                     />
                   </div>
 
-                  <div ref={turnstileBox} />
+                  <Turnstile ref={turnstile} />
 
                   <Button
                     type="submit"

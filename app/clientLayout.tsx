@@ -13,26 +13,27 @@ function ScrollToTop() {
   return null;
 }
 
+// Right-click / copy / image-drag blocking, switched on and off from the admin
+// ("Setări"). Off until the setting says otherwise, and never on the admin itself.
 function ContentProtection() {
-  const [isAdminMode, setIsAdminMode] = React.useState(false);
-  const pathname = usePathname();
+  const [enabled, setEnabled] = React.useState(false);
 
   React.useEffect(() => {
-    const checkAdminCookie = () => {
-      const hasAdminCookie = document.cookie
-        .split("; ")
-        .some((cookie) => cookie.startsWith("xdxadmin="));
-      setIsAdminMode(hasAdminCookie);
+    if (window.location.hostname.startsWith("admin.")) return;
+    let cancelled = false;
+    fetch("/api/site-settings")
+      .then((response) => response.json())
+      .then((settings: { copyProtection?: boolean }) => {
+        if (!cancelled) setEnabled(settings.copyProtection === true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
     };
-
-    checkAdminCookie();
-    const interval = setInterval(checkAdminCookie, 1000);
-
-    return () => clearInterval(interval);
-  }, [pathname]);
+  }, []);
 
   React.useEffect(() => {
-    if (isAdminMode) {
+    if (!enabled) {
       document.body.classList.remove("content-protected");
       return;
     }
@@ -75,7 +76,7 @@ function ContentProtection() {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("dragstart", handleDragStart);
     };
-  }, [isAdminMode]);
+  }, [enabled]);
 
   return null;
 }

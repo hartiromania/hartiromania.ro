@@ -5,13 +5,13 @@ import { SUSPECT_FROM, type Analysis, type BotSignals, type ContactInput } from 
 // Neutral, minimal and technical on purpose: an internal tool email, not part of the site's look.
 // Inter and JetBrains Mono load in Apple Mail and some apps; Gmail and Outlook fall back to
 // the system fonts in the stack, which keep the same clean look.
-const SANS = "Inter, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-const MONO = "'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'Courier New', monospace";
-const BG = "#f4f4f5";
-const CARD = "#ffffff";
-const LINE = "#e4e4e7";
-const INK = "#18181b";
-const MUTED = "#71717a";
+export const SANS = "Inter, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+export const MONO = "'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'Courier New', monospace";
+export const BG = "#f4f4f5";
+export const CARD = "#ffffff";
+export const LINE = "#e4e4e7";
+export const INK = "#18181b";
+export const MUTED = "#71717a";
 const OK = { bg: "#ecfdf5", ink: "#047857" };
 const WARN = { bg: "#fef2f2", ink: "#b91c1c" };
 const PLACE = { bg: "#eff6ff", ink: "#1d4ed8" };
@@ -27,7 +27,7 @@ export interface ContactEmailData {
   device: string;
 }
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -63,7 +63,10 @@ const QUOTE_MAX = 1500;
 // below the space for the answer, so the reply does not carry this whole notification
 // along (as the mail client's Reply would). Zoho's compose window reads the body as HTML.
 // The card is part of the email the customer receives, so it is written for them too.
-function replyMailto({ input, receivedAt }: ContactEmailData): string {
+function replyMailto({
+  input,
+  receivedAt,
+}: Pick<ContactEmailData, "input" | "receivedAt">): string {
   const text =
     input.message.length > QUOTE_MAX ? `${input.message.slice(0, QUOTE_MAX)}…` : input.message;
   const body = [
@@ -78,6 +81,12 @@ function replyMailto({ input, receivedAt }: ContactEmailData): string {
   return `mailto:${encodeURIComponent(input.email)}?subject=${encodeURIComponent(`Re: ${input.subject}`)}&body=${encodeURIComponent(body)}`;
 }
 
+/** Opens Zoho Mail's compose window directly (the address Zoho itself uses for mailto
+ *  links), so it works without setting Zoho as the browser's mail handler. */
+export function zohoReplyUrl(data: Pick<ContactEmailData, "input" | "receivedAt">): string {
+  return `https://mail.zoho.eu/zm/comp.do?ct=${encodeURIComponent(replyMailto(data))}`;
+}
+
 export function contactEmailHtml(data: ContactEmailData): string {
   const { input, analysis, signals } = data;
   const suspect = analysis.verdict === "suspect";
@@ -86,9 +95,7 @@ export function contactEmailHtml(data: ContactEmailData): string {
   const email = escapeHtml(input.email);
   const subject = escapeHtml(input.subject);
   const message = escapeHtml(input.message).replace(/\n/g, "<br>");
-  // Opens Zoho Mail's compose window directly (the address Zoho itself uses for mailto
-  // links), so it works without setting Zoho as the browser's mail handler.
-  const replyHref = `https://mail.zoho.eu/zm/comp.do?ct=${encodeURIComponent(replyMailto(data))}`;
+  const replyHref = zohoReplyUrl(data);
   const label = `font-family:${SANS};font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${MUTED};`;
 
   const row = (key: string, value: string, mono = false) => `
