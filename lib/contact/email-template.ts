@@ -69,8 +69,8 @@ function replyMailto({ input, receivedAt }: ContactEmailData): string {
   const body = [
     "<p><br></p><p><br></p><p><br></p>",
     `<div style="margin-top:24px;max-width:560px;border:1px solid ${LINE};border-radius:12px;padding:18px 20px;font-family:${SANS};">`,
-    `<div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${MUTED};">Mesaj trimis prin hartiromania.ro</div>`,
-    `<div style="font-size:13px;color:${MUTED};padding-top:4px;">${escapeHtml(input.name)} · ${escapeHtml(formatRoDate(receivedAt))}</div>`,
+    `<div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${MUTED};">Răspuns la mesajul trimis prin hartiromania.ro</div>`,
+    `<div style="font-size:13px;color:${MUTED};padding-top:4px;"><strong style="color:${INK};">${escapeHtml(input.name)}</strong> a scris pe ${escapeHtml(formatRoDate(receivedAt))}:</div>`,
     `<div style="font-size:16px;font-weight:600;color:${INK};padding:14px 0 8px;">${escapeHtml(input.subject)}</div>`,
     `<div style="border-left:2px solid ${INK};padding-left:14px;font-size:14px;line-height:1.6;color:#3f3f46;">${escapeHtml(text).replace(/\n/g, "<br>")}</div>`,
     "</div>",
