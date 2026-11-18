@@ -1,16 +1,19 @@
 // The email the team receives for every contact-form message.
 // Table layout and inline styles: the only form all email clients (Gmail, Zoho, Outlook) render reliably.
-import type { Analysis, BotSignals, ContactInput } from "./spam-score";
+import { SUSPECT_FROM, type Analysis, type BotSignals, type ContactInput } from "./spam-score.ts";
 
-const ORANGE = "#a0501a";
-const FRAME = "#d2691e";
-const CREAM = "#faf5eb";
-const PAPER = "#fffdf8";
-const INK = "#1a1a1a";
-const MUTED = "#6b6255";
-const WARN_BG = "#fdecea";
-const WARN_INK = "#8a1f11";
-const SERIF = "Georgia, 'Times New Roman', serif";
+// Neutral, minimal and technical on purpose: an internal tool email, not part of the site's look.
+// Inter and JetBrains Mono load in Apple Mail and some apps; Gmail and Outlook fall back to
+// the system fonts in the stack, which keep the same clean look.
+const SANS = "Inter, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const MONO = "'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'Courier New', monospace";
+const BG = "#f4f4f5";
+const CARD = "#ffffff";
+const LINE = "#e4e4e7";
+const INK = "#18181b";
+const MUTED = "#71717a";
+const OK = { bg: "#ecfdf5", ink: "#047857" };
+const WARN = { bg: "#fef2f2", ink: "#b91c1c" };
 
 export interface ContactEmailData {
   input: ContactInput;
@@ -62,70 +65,87 @@ export function contactEmailSubject({ input, analysis }: ContactEmailData): stri
 export function contactEmailHtml(data: ContactEmailData): string {
   const { input, analysis, signals } = data;
   const suspect = analysis.verdict === "suspect";
+  const tone = suspect ? WARN : OK;
   const name = escapeHtml(input.name);
   const email = escapeHtml(input.email);
   const subject = escapeHtml(input.subject);
   const message = escapeHtml(input.message).replace(/\n/g, "<br>");
   const replyHref = `mailto:${encodeURIComponent(input.email)}?subject=${encodeURIComponent(`Re: ${input.subject}`)}`;
+  const label = `font-family:${SANS};font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${MUTED};`;
 
-  const row = (label: string, value: string) => `
+  const row = (key: string, value: string, mono = false) => `
     <tr>
-      <td style="padding:8px 0;color:${MUTED};font-size:14px;width:110px;vertical-align:top;">${label}</td>
-      <td style="padding:8px 0;color:${INK};font-size:14px;">${value}</td>
+      <td style="padding:10px 0;border-top:1px solid ${LINE};${label}width:96px;vertical-align:top;">${key}</td>
+      <td style="padding:10px 0;border-top:1px solid ${LINE};font-family:${mono ? MONO : SANS};font-size:13px;line-height:1.5;color:${INK};">${value}</td>
     </tr>`;
 
-  const warning = suspect
+  const reasons = analysis.reasons.filter((r) => r.startsWith("+"));
+  const flags = suspect
     ? `
-    <tr><td style="padding:0 32px 8px;">
-      <div style="background:${WARN_BG};border-left:4px solid ${WARN_INK};padding:14px 16px;color:${WARN_INK};font-size:14px;line-height:1.5;">
-        <strong>Posibil spam (scor ${analysis.score}/100).</strong> Verifică mesajul înainte să răspunzi.
-        <ul style="margin:8px 0 0;padding-left:18px;">${analysis.reasons
-          .filter((r) => r.startsWith("+"))
-          .map((r) => `<li>${escapeHtml(r)}</li>`)
-          .join("")}</ul>
-      </div>
-    </td></tr>`
+        <tr><td style="padding:0 32px 24px;">
+          <div style="background:${WARN.bg};border-radius:8px;padding:14px 16px;">
+            <div style="${label}color:${WARN.ink};padding-bottom:6px;">De ce pare spam</div>
+            ${reasons
+              .map(
+                (r) =>
+                  `<div style="font-family:${MONO};font-size:12px;line-height:1.7;color:${WARN.ink};">${escapeHtml(r)}</div>`,
+              )
+              .join("")}
+          </div>
+        </td></tr>`
     : "";
+
+  const location = `${escapeHtml(data.location)}${
+    data.mapUrl ? ` · <a href="${escapeHtml(data.mapUrl)}" style="color:${INK};">hartă</a>` : ""
+  }<div style="font-size:12px;color:${MUTED};">aproximativă, după adresa IP</div>`;
 
   return `<!doctype html>
 <html lang="ro">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${subject}</title></head>
-<body style="margin:0;padding:0;background:${CREAM};font-family:${SERIF};">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${CREAM};padding:24px 12px;">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>${subject}</title>
+<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');</style>
+</head>
+<body style="margin:0;padding:0;background:${BG};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG};padding:32px 12px;">
     <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${PAPER};border:3px double ${FRAME};">
-        <tr><td style="padding:24px 32px 8px;">
-          <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${ORANGE};">Hărți România · formular de contact</div>
-          <h1 style="margin:8px 0 0;font-size:24px;line-height:1.3;color:${INK};font-weight:normal;">${subject}</h1>
-          <p style="margin:6px 0 0;font-size:15px;color:${MUTED};">de la <strong style="color:${INK};">${name}</strong> · <a href="mailto:${email}" style="color:${ORANGE};">${email}</a></p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+        <tr><td style="padding:0 4px 12px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td style="font-family:${SANS};font-size:13px;font-weight:600;color:${INK};">Hărți România</td>
+            <td align="right" style="font-family:${MONO};font-size:12px;color:${MUTED};">contact / mesaj nou</td>
+          </tr></table>
         </td></tr>
-        ${warning}
-        <tr><td style="padding:12px 32px;">
-          <div style="background:#ffffff;border:1px solid #e8dcc6;padding:18px 20px;font-size:16px;line-height:1.6;color:${INK};">${message}</div>
-        </td></tr>
-        <tr><td style="padding:8px 32px 0;" align="left">
-          <a href="${replyHref}" style="display:inline-block;background:${ORANGE};color:#ffffff;text-decoration:none;padding:12px 22px;font-size:15px;">Răspunde lui ${name}</a>
-        </td></tr>
-        <tr><td style="padding:20px 32px 8px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e8dcc6;">
-            ${row("Primit", escapeHtml(formatRoDate(data.receivedAt)))}
-            ${row(
-              "Locație",
-              `${escapeHtml(data.location)}${
-                data.mapUrl
-                  ? ` · <a href="${escapeHtml(data.mapUrl)}" style="color:${ORANGE};">vezi pe hartă</a>`
-                  : ""
-              }<br><span style="color:${MUTED};font-size:12px;">aproximativă, după adresa IP</span>`,
-            )}
-            ${row("Adresă IP", escapeHtml(data.ip))}
-            ${row("Dispozitiv", escapeHtml(data.device))}
-            ${row("Email", DOMAIN_LABEL[signals.emailDomain])}
-            ${row("Anti-bot", TURNSTILE_LABEL[signals.turnstile])}
-            ${row("Scor spam", `${analysis.score}/100 · ${suspect ? "suspect" : "în regulă"}`)}
+        <tr><td style="background:${CARD};border:1px solid ${LINE};border-radius:12px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr><td style="padding:28px 32px 20px;">
+              <span style="display:inline-block;background:${tone.bg};color:${tone.ink};font-family:${SANS};font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;">${suspect ? "Posibil spam" : "Mesaj verificat"} · ${analysis.score}/100</span>
+              <h1 style="margin:16px 0 6px;font-family:${SANS};font-size:22px;line-height:1.3;font-weight:600;letter-spacing:-0.01em;color:${INK};">${subject}</h1>
+              <div style="font-family:${SANS};font-size:14px;color:${MUTED};">${name} · <a href="mailto:${email}" style="color:${INK};">${email}</a></div>
+            </td></tr>
+            ${flags}
+            <tr><td style="padding:0 32px 24px;">
+              <div style="font-family:${SANS};font-size:15px;line-height:1.65;color:${INK};border-left:2px solid ${INK};padding:2px 0 2px 16px;">${message}</div>
+            </td></tr>
+            <tr><td style="padding:0 32px 28px;">
+              <a href="${replyHref}" style="display:inline-block;background:${INK};color:#ffffff;font-family:${SANS};font-size:14px;font-weight:500;text-decoration:none;padding:11px 20px;border-radius:8px;">Răspunde</a>
+            </td></tr>
+            <tr><td style="padding:0 32px 24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                ${row("Primit", escapeHtml(formatRoDate(data.receivedAt)))}
+                ${row("Locație", location)}
+                ${row("IP", escapeHtml(data.ip), true)}
+                ${row("Dispozitiv", escapeHtml(data.device))}
+                ${row("Email", DOMAIN_LABEL[signals.emailDomain])}
+                ${row("Anti-bot", TURNSTILE_LABEL[signals.turnstile])}
+                ${row("Scor", `${analysis.score}/100 · prag ${SUSPECT_FROM}`, true)}
+              </table>
+            </td></tr>
           </table>
         </td></tr>
-        <tr><td style="padding:12px 32px 24px;color:${MUTED};font-size:12px;line-height:1.5;">
-          Trimis prin formularul de contact de pe hartiromania.ro. „Reply” răspunde direct expeditorului.
+        <tr><td style="padding:16px 4px 0;font-family:${SANS};font-size:12px;line-height:1.5;color:${MUTED};">
+          Trimis automat din formularul de contact hartiromania.ro. „Reply” răspunde direct expeditorului.
         </td></tr>
       </table>
     </td></tr>
