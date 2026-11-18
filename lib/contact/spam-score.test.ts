@@ -286,3 +286,23 @@ for (const sample of calibrationJunk) {
     assert.equal(result.verdict, "suspect", `score ${result.score}: ${result.reasons.join("; ")}`);
   });
 }
+
+test("test messages get a visible score, not 0", () => {
+  const result = check({
+    name: "Test",
+    email: "test@gmail.com",
+    subject: "Test",
+    message: "Ba asta este un test!!!",
+  });
+  assert.ok(result.score >= 40, `score ${result.score}: ${result.reasons.join("; ")}`);
+});
+
+test("a real message that mentions testing stays ok", () => {
+  const result = check({
+    name: "Ion",
+    email: "ion@gmail.com",
+    subject: "Harta",
+    message: "Am testat rama acasă și se potrivește perfect, mulțumesc!",
+  });
+  assert.equal(result.score, 0, result.reasons.join("; "));
+});

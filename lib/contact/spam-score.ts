@@ -211,15 +211,19 @@ export function analyzeMessage(input: ContactInput, signals: BotSignals): Analys
   if (msgLetters.length >= 20 && upper.length / msgLetters.length > 0.8)
     add(10, "scris numai cu majuscule");
 
+  // Test messages ("test", "testing", "lorem ipsum") are not spam, but not a real enquiry either.
+  const testLike = /(test|teste|testing|lorem|ipsum)/i.test(all) || /^test/i.test(local);
+  if (testLike) add(45, "pare un mesaj de test");
+
   const same = (a: string, b: string) => a.trim().length > 3 && plain(a).trim() === plain(b).trim();
   if (same(name, subject) || same(subject, message)) add(15, "câmpuri identice între ele");
 
   // --- Signs of a real person: only when no trap was hit and the message says something.
   // A person can pass Cloudflare and still type nonsense, so the bonuses need real content.
-  if (!signals.honeypot && !nonsense && !onlyLinks && spamHits === 0) {
+  if (!signals.honeypot && !nonsense && !testLike && !onlyLinks && spamHits === 0) {
     if (signals.turnstile === "passed") add(-10, "verificarea anti-bot Cloudflare a trecut");
   }
-  if (!signals.honeypot && !nonsense && spamHits === 0 && links.length === 0) {
+  if (!signals.honeypot && !nonsense && !testLike && spamHits === 0 && links.length === 0) {
     if (knowsLanguage) add(-10, "folosește cuvinte uzuale dintr-o limbă reală");
     if (/[ăâîșțşţ]/i.test(all)) add(-10, "folosește diacritice românești");
   }
