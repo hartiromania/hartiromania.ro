@@ -35,6 +35,16 @@ test("lowercase gibberish is suspect", () => {
   assert.equal(result.verdict, "suspect");
 });
 
+test("keyboard mashing is suspect even when Turnstile passes", () => {
+  const result = check({
+    name: "sfasfa",
+    email: "alex@google.com",
+    subject: "sdfsfsdf",
+    message: "sfasfas",
+  });
+  assert.equal(result.verdict, "suspect", `score ${result.score}: ${result.reasons.join("; ")}`);
+});
+
 test("SEO pitch with a link is suspect", () => {
   const result = check({
     name: "Mike",

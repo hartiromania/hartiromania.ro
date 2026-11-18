@@ -79,8 +79,15 @@ function words(text: string): string[] {
 
 // A single token that no person would type: case flipping inside the word
 // ("sTnpUimWcKq") or a long run of letters with almost no vowels ("kjhdsfkjh").
+// Letters hit by sliding a hand along one keyboard row ("sfasfa", "sdfsfsdf"). Only the
+// middle and bottom rows: the top row holds most vowels, so real words fit in it.
+function isKeyboardMash(word: string): boolean {
+  return word.length >= 5 && !COMMON_WORDS.has(word) && /^([asdfghjkl]+|[zxcvbnm]+)$/.test(word);
+}
+
 function isGibberishToken(token: string): boolean {
   const letters = token.replace(/[^\p{L}]/gu, "");
+  if (isKeyboardMash(plain(letters))) return true;
   if (letters.length < 7) return false;
   const caseFlips = (letters.slice(1).match(/(?<=\p{Ll})\p{Lu}/gu) ?? []).length;
   if (caseFlips >= 3) return true;
@@ -90,7 +97,7 @@ function isGibberishToken(token: string): boolean {
 }
 
 function isGibberishText(text: string): boolean {
-  const longTokens = text.split(/\s+/).filter((t) => t.replace(/[^\p{L}]/gu, "").length >= 7);
+  const longTokens = text.split(/\s+/).filter((t) => t.replace(/[^\p{L}]/gu, "").length >= 5);
   if (longTokens.length === 0) return false;
   const bad = longTokens.filter(isGibberishToken).length;
   return bad / longTokens.length >= 0.5;

@@ -34,6 +34,7 @@ declare global {
           sitekey: string;
           appearance?: "always" | "execute" | "interaction-only";
           language?: string;
+          "error-callback"?: (code: string) => boolean;
         },
       ) => string | undefined;
       reset: (widgetId: string) => void;
@@ -69,6 +70,9 @@ export default function ContactPage() {
       sitekey: TURNSTILE_SITE_KEY,
       appearance: "interaction-only",
       language: "ro",
+      // A failed check must not break the page: the message is still sent, and the
+      // server counts the missing token in the spam score.
+      "error-callback": () => true,
     });
   };
   const [submitStatus, setSubmitStatus] = useState<{
