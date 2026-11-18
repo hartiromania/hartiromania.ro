@@ -7,13 +7,13 @@ import { db, schema } from "@/lib/db";
 
 const t = schema.contactMessages;
 
-export type MessageFolder = "inbox" | "spam" | "arhiva";
+export type MessageFolder = "inbox" | "spam" | "archive";
 
 /** A message is spam when the owner said so, or when the filter said so and the owner didn't overrule it. */
 const isSpam = sql`coalesce(${t.markedAs} = 'spam', ${t.verdict} = 'suspect')`;
 
 function folderWhere(folder: MessageFolder) {
-  if (folder === "arhiva") return eq(t.archived, true);
+  if (folder === "archive") return eq(t.archived, true);
   return and(eq(t.archived, false), folder === "spam" ? isSpam : sql`not ${isSpam}`);
 }
 

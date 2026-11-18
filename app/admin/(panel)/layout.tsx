@@ -3,7 +3,7 @@ import { Sidebar } from "@/components/admin/sidebar";
 import { requireAdmin } from "@/lib/admin/auth";
 import { unreadCount } from "@/lib/admin/messages";
 
-// Every page in here needs a valid session; without one, requireAdmin sends to /conectare.
+// Every page in here needs a valid session; without one, requireAdmin sends to /login.
 export const dynamic = "force-dynamic";
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {

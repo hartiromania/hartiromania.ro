@@ -24,12 +24,12 @@ const LABELS: Record<string, string> = {
 
 const PAGE_NAMES: Record<string, string> = {
   "/": "Panou",
-  "/conectare": "Conectare",
-  "/conectare/confirma": "Confirmare conectare",
-  "/mesaje": "Mesaje",
-  "/setari": "Setări",
-  "/securitate": "Securitate",
-  "/jurnal": "Jurnal",
+  "/login": "Conectare",
+  "/login/confirm": "Confirmare conectare",
+  "/messages": "Mesaje",
+  "/settings": "Setări",
+  "/security": "Securitate",
+  "/journal": "Jurnal",
 };
 
 export function activityLabel(action: string, detail: Record<string, unknown> | null): string {
@@ -39,7 +39,7 @@ export function activityLabel(action: string, detail: Record<string, unknown> | 
   }
   if (action === "page.view" && detail) {
     const path = String(detail.path ?? "");
-    const name = PAGE_NAMES[path] ?? (path.startsWith("/mesaje/") ? "Un mesaj" : path);
+    const name = PAGE_NAMES[path] ?? (path.startsWith("/messages/") ? "Un mesaj" : path);
     return `${base}: ${name}`;
   }
   if (action === "setting.changed" && detail) {
@@ -60,7 +60,7 @@ export async function recentActivity(limit = 30) {
 
 const log = schema.adminAuditLog;
 
-export type JournalFilter = "toate" | "conectari" | "esecuri" | "vizite" | "modificari";
+export type JournalFilter = "all" | "logins" | "failed" | "views" | "changes";
 
 const FAILURES = or(
   inArray(log.action, ["login.code_wrong", "login.link_invalid"]),
@@ -68,15 +68,15 @@ const FAILURES = or(
 );
 
 const FILTERS: Record<JournalFilter, SQL | undefined> = {
-  toate: undefined,
-  conectari: or(
+  all: undefined,
+  logins: or(
     like(log.action, "login.%"),
     like(log.action, "logout%"),
     like(log.action, "sessions.%"),
   ),
-  esecuri: FAILURES,
-  vizite: sql`${log.action} = 'page.view'`,
-  modificari: or(like(log.action, "setting.%"), like(log.action, "message.%")),
+  failed: FAILURES,
+  views: sql`${log.action} = 'page.view'`,
+  changes: or(like(log.action, "setting.%"), like(log.action, "message.%")),
 };
 
 export async function journal(filter: JournalFilter, limit = 200) {

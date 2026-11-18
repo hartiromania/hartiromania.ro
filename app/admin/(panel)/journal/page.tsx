@@ -12,11 +12,11 @@ import {
 export const metadata = { title: "Jurnal" };
 
 const FILTERS: { key: JournalFilter; label: string }[] = [
-  { key: "toate", label: "Tot" },
-  { key: "conectari", label: "Conectări" },
-  { key: "esecuri", label: "Încercări eșuate" },
-  { key: "vizite", label: "Pagini deschise" },
-  { key: "modificari", label: "Modificări" },
+  { key: "all", label: "Tot" },
+  { key: "logins", label: "Conectări" },
+  { key: "failed", label: "Încercări eșuate" },
+  { key: "views", label: "Pagini deschise" },
+  { key: "changes", label: "Modificări" },
 ];
 
 const FAILED = new Set(["login.code_wrong", "login.link_invalid"]);
@@ -30,10 +30,10 @@ const EXACT = new Intl.DateTimeFormat("ro-RO", {
 export default async function JournalPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tip?: string }>;
+  searchParams: Promise<{ type?: string }>;
 }) {
-  const { tip } = await searchParams;
-  const filter = FILTERS.find((f) => f.key === tip)?.key ?? "toate";
+  const { type } = await searchParams;
+  const filter = FILTERS.find((f) => f.key === type)?.key ?? "all";
   const [rows, stats, mine] = await Promise.all([journal(filter), journalStats(), ownerIps()]);
 
   return (
@@ -62,7 +62,7 @@ export default async function JournalPage({
         {FILTERS.map((f) => (
           <Link
             key={f.key}
-            href={f.key === "toate" ? "/jurnal" : `/jurnal?tip=${f.key}`}
+            href={f.key === "all" ? "/journal" : `/journal?type=${f.key}`}
             aria-current={f.key === filter ? "page" : undefined}
             className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
               f.key === filter

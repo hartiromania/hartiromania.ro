@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { LogOut } from "lucide-react";
 
 import { buttonClass, PageHeader, Panel, Tag, timeAgo } from "@/components/admin/ui";
 import { activeSessions, requireAdmin } from "@/lib/admin/auth";
-import { signOut, signOutOthers } from "../actions";
+import { SignOutButton } from "@/components/admin/sign-out-button";
+import { signOutOthers } from "../actions";
 
 export const metadata = { title: "Securitate" };
 
@@ -15,11 +15,7 @@ export default async function SecurityPage() {
   return (
     <>
       <PageHeader title="Securitate">
-        <form action={signOut}>
-          <button className={buttonClass("secondary")}>
-            <LogOut aria-hidden /> Deconectare
-          </button>
-        </form>
+        <SignOutButton className={buttonClass("secondary")} />
       </PageHeader>
 
       <Panel className="mb-6">
@@ -60,7 +56,7 @@ export default async function SecurityPage() {
       <p className="mt-3 text-sm text-(--muted)">
         Sesiunile expiră singure după 14 zile. La fiecare conectare nouă primești un email. Tot ce
         se întâmplă în admin vezi în{" "}
-        <Link href="/jurnal" className="underline">
+        <Link href="/journal" className="underline">
           Jurnal
         </Link>
         .

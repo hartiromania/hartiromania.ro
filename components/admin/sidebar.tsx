@@ -3,10 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut } from "lucide-react";
 
 import { NAV } from "@/lib/admin/nav";
-import { signOut } from "@/app/admin/(panel)/actions";
+import { SignOutButton } from "./sign-out-button";
 
 // Pages are served from the admin host root, but render under /admin internally.
 function active(pathname: string, href: string) {
@@ -61,15 +60,9 @@ export function Sidebar({ unread }: { unread: number }) {
         })}
       </nav>
 
-      <form action={signOut} className="hidden border-t border-(--line) p-3 md:block">
-        <button
-          type="submit"
-          className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-[15px] text-(--ink-2) transition-colors hover:bg-(--sunken) hover:text-(--ink)"
-        >
-          <LogOut className="size-[18px]" aria-hidden />
-          Deconectare
-        </button>
-      </form>
+      <div className="hidden border-t border-(--line) p-3 md:block">
+        <SignOutButton className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-[15px] text-(--ink-2) transition-colors hover:bg-(--sunken) hover:text-(--ink)" />
+      </div>
     </aside>
   );
 }

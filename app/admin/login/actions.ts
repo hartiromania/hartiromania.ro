@@ -1,7 +1,6 @@
 "use server";
 
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 
 import {
   ADMIN_EMAIL,
@@ -14,10 +13,11 @@ import {
 } from "@/lib/admin/auth";
 import { sendLoginEmail, sendNewSignInEmail } from "@/lib/admin/emails";
 import { overLimit, verifyTurnstile } from "@/lib/contact/checks";
-import { adminPath } from "@/lib/admin/url";
 
+// Actions never redirect: a redirect inside an action skips the admin routing.
+// They answer with the step to show; on "done" the browser goes to the panel itself.
 export interface LoginState {
-  step: "email" | "code";
+  step: "email" | "code" | "done";
   error?: string;
 }
 
@@ -45,7 +45,7 @@ export async function requestAccess(_: LoginState, form: FormData): Promise<Logi
   if (turnstile === "failed" || turnstile === "missing") {
     return {
       step: "email",
-      error: "Verificarea anti-bot nu a trecut. Reîncarcă pagina și încearcă din nou.",
+      error: "Verificarea de securitate a eșuat. Reîncarcă pagina și încearcă din nou.",
     };
   }
 
@@ -59,7 +59,7 @@ export async function requestAccess(_: LoginState, form: FormData): Promise<Logi
   if (isOwner && !(await overLimit("admin:request:owner", 10, 60 * 60))) {
     const { token, code } = await createLoginRequest();
     await sendLoginEmail({
-      link: `${await origin()}/conectare/confirma?t=${encodeURIComponent(token)}`,
+      link: `${await origin()}/login/confirm?t=${encodeURIComponent(token)}`,
       code,
       location,
       device,
@@ -80,7 +80,6 @@ async function signIn(method: "code" | "link") {
   } catch (error) {
     console.error("[admin] new sign-in email failed", error);
   }
-  redirect(adminPath("/"));
 }
 
 /** Step 2: the 6-digit code from the email. */
@@ -90,30 +89,36 @@ export async function verifyCode(_: LoginState, form: FormData): Promise<LoginSt
     return { step: "code", error: TOO_MANY };
 
   const code = String(form.get("code") ?? "").replace(/\D/g, "");
-  if (code.length !== 6)
-    return { step: "code", error: "Cod greșit. Verifică emailul și încearcă din nou." };
+  if (code.length !== 6) return { step: "code", error: "Cod invalid." };
 
   const result = await consumeCode(code);
   if (result === "wrong") {
     await audit("login.code_wrong");
-    return { step: "code", error: "Cod greșit. Verifică emailul și încearcă din nou." };
+    return { step: "code", error: "Cod invalid." };
   }
   if (result === "expired") {
-    return { step: "email", error: "Codul a expirat sau a fost folosit. Cere unul nou." };
+    return { step: "email", error: "Cod invalid sau expirat." };
   }
   await signIn("code");
-  return { step: "code" };
+  return { step: "done" };
+}
+
+export interface ConfirmState {
+  done: boolean;
+  error?: string;
 }
 
 /** The link from the email, confirmed with one click (so mail scanners can't use it up). */
-export async function confirmLink(form: FormData) {
+export async function confirmLink(_: ConfirmState, form: FormData): Promise<ConfirmState> {
   const { ip } = await requestInfo();
-  if (await overLimit(`admin:link:${ip ?? "unknown"}`, 10, 15 * 60))
-    redirect(adminPath("/conectare?eroare=limita"));
+  if (await overLimit(`admin:link:${ip ?? "unknown"}`, 10, 15 * 60)) {
+    return { done: false, error: TOO_MANY };
+  }
   const token = String(form.get("token") ?? "");
   if (!token || !(await consumeToken(token))) {
     await audit("login.link_invalid");
-    redirect(adminPath("/conectare?eroare=link"));
+    return { done: false, error: "Link invalid sau expirat." };
   }
   await signIn("link");
+  return { done: true };
 }

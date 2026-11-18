@@ -15,7 +15,6 @@ import { cache } from "react";
 import { db, schema } from "@/lib/db";
 import { deviceOf, visitorOf } from "@/lib/request-info";
 import { hashCode, hashToken, newCode, newToken, sameHash } from "./tokens";
-import { adminPath } from "./url";
 
 export const ADMIN_EMAIL = "contact@hartiromania.ro";
 
@@ -172,7 +171,18 @@ export const currentSession = cache(async () => {
 /** For every admin page and action: no session, no access. */
 export async function requireAdmin() {
   const session = await currentSession();
-  if (!session) redirect(adminPath("/conectare"));
+  if (!session) redirect("/login");
+  return session;
+}
+
+/**
+ * For server actions: no session, no action. Actions never redirect (a redirect inside an
+ * action skips the admin routing), so the page shows its error screen instead and the
+ * next load sends the visitor to /login.
+ */
+export async function assertAdmin() {
+  const session = await currentSession();
+  if (!session) throw new Error("Neautorizat");
   return session;
 }
 

@@ -11,8 +11,8 @@ export interface NavItem {
 
 export const NAV: NavItem[] = [
   { href: "/", label: "Panou", icon: Gauge },
-  { href: "/mesaje", label: "Mesaje", icon: Inbox, badge: "unread" },
-  { href: "/setari", label: "Setări", icon: Settings },
-  { href: "/jurnal", label: "Jurnal", icon: ScrollText },
-  { href: "/securitate", label: "Securitate", icon: ShieldCheck },
+  { href: "/messages", label: "Mesaje", icon: Inbox, badge: "unread" },
+  { href: "/settings", label: "Setări", icon: Settings },
+  { href: "/journal", label: "Jurnal", icon: ScrollText },
+  { href: "/security", label: "Securitate", icon: ShieldCheck },
 ];

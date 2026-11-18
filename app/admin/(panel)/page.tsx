@@ -29,7 +29,7 @@ export default async function DashboardPage() {
         <strong className="text-(--ink)">{plural(counts.today, "mesaj", "mesaje")}</strong>, în
         ultimele 7 zile {plural(counts.week, "mesaj", "mesaje")}.{" "}
         {counts.unread > 0 ? (
-          <Link href="/mesaje" className="font-medium text-(--accent) underline">
+          <Link href="/messages" className="font-medium text-(--accent) underline">
             {plural(counts.unread, "necitit", "necitite")}
           </Link>
         ) : (
@@ -43,7 +43,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between px-5 pt-4 pb-2">
             <h2 className="font-semibold">Mesaje recente</h2>
             <Link
-              href="/mesaje"
+              href="/messages"
               className="flex items-center gap-1 text-sm text-(--ink-2) hover:text-(--ink)"
             >
               Toate <ArrowRight className="size-3.5" aria-hidden />
@@ -58,7 +58,7 @@ export default async function DashboardPage() {
               {messages.map((m) => (
                 <li key={m.id}>
                   <Link
-                    href={`/mesaje/${m.id}`}
+                    href={`/messages/${m.id}`}
                     className="flex items-center gap-3 px-5 py-2.5 transition-colors hover:bg-(--sunken)"
                   >
                     <div className="min-w-0 flex-1">
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
               ))}
             </ul>
             <Link
-              href="/setari"
+              href="/settings"
               className="mt-3 inline-block text-sm text-(--ink-2) hover:text-(--ink)"
             >
               Schimbă setările

@@ -40,7 +40,13 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
   return (
     <>
       <Link
-        href={spam ? "/mesaje?dosar=spam" : message.archived ? "/mesaje?dosar=arhiva" : "/mesaje"}
+        href={
+          spam
+            ? "/messages?folder=spam"
+            : message.archived
+              ? "/messages?folder=archive"
+              : "/messages"
+        }
         className="mb-5 inline-flex items-center gap-1.5 text-sm text-(--ink-2) hover:text-(--ink)"
       >
         <ArrowLeft className="size-4" aria-hidden /> Mesaje
@@ -98,7 +104,7 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
             ["Locație", message.location ?? "necunoscută"],
             ["IP", message.ip ?? "necunoscut"],
             ["Dispozitiv", message.device ?? "necunoscut"],
-            ["Email trimis", message.emailed ? "da, în Zoho" : "nu (eroare la trimitere)"],
+            ["Email trimis", message.emailed ? "da, în Zoho" : "nu (error la trimitere)"],
             ...(reasons.length > 0 ? [["De ce", reasons.join("\n")]] : []),
           ].map(([term, value]) => (
             <div key={term} className="grid gap-1 px-5 py-3 sm:grid-cols-[9rem_1fr] sm:gap-6">

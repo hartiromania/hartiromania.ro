@@ -19,12 +19,15 @@ export function proxy(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
 
   if (ADMIN_HOST.test(host)) {
+    // The internal folder never shows in the address bar: /admin/x → /x.
+    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+      const clean = request.nextUrl.clone();
+      clean.pathname = pathname.slice("/admin".length) || "/";
+      return NextResponse.redirect(clean, 308);
+    }
     // API routes keep their own paths; every page maps to /admin/<path>.
     const url = request.nextUrl.clone();
-    const internal = pathname === "/admin" || pathname.startsWith("/admin/");
-    if (!pathname.startsWith("/api/") && !internal) {
-      url.pathname = `/admin${pathname === "/" ? "" : pathname}`;
-    }
+    if (!pathname.startsWith("/api/")) url.pathname = `/admin${pathname === "/" ? "" : pathname}`;
     const response = pathname.startsWith("/api/") ? NextResponse.next() : NextResponse.rewrite(url);
     for (const [key, value] of Object.entries(ADMIN_HEADERS)) response.headers.set(key, value);
     return response;
