@@ -50,6 +50,10 @@ export const adminAuditLog = pgTable(
     action: text("action").notNull(),
     detail: jsonb("detail").$type<Record<string, unknown>>(),
     ip: text("ip"),
+    location: text("location"),
+    device: text("device"),
+    /** Set when the action came from a signed-in browser (the owner). */
+    sessionId: uuid("session_id"),
     createdAt: createdAt(),
   },
   (t) => [index("admin_audit_log_created_idx").on(t.createdAt)],

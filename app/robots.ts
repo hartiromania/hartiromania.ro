@@ -3,7 +3,7 @@ import { SITE_URL } from "@/lib/site";
 
 // Roboții asistenților AI sunt permiși explicit, ca ChatGPT, Claude, Perplexity sau
 // Gemini să poată citi și cita site-ul. Zonele tehnice rămân închise pentru toți.
-const DISALLOW = ["/api/", "/xdxadmin"];
+const DISALLOW = ["/api/"];
 
 const AI_CRAWLERS = [
   "GPTBot",

@@ -51,7 +51,8 @@ export function NewsletterPopup() {
 
   // Efectele rulează doar în browser, după montare, deci localStorage e sigur aici.
   useEffect(() => {
-    if (pathname?.startsWith("/xdxadmin")) return;
+    // Never on the admin panel (its own host).
+    if (window.location.hostname.startsWith("admin.")) return;
 
     if (shouldSuppressPopup(readState())) return;
 
