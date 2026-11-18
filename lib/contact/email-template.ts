@@ -56,22 +56,25 @@ export function contactEmailSubject({ input, analysis }: ContactEmailData): stri
   return `${prefix}Mesaj de la ${input.name}: ${input.subject}`.slice(0, 200);
 }
 
-// "Răspunde" opens a new email to the sender with their subject and message quoted, so the
-// reply does not carry this whole notification along (as the mail client's Reply would).
+// The quoted message is cut here so the reply link stays short enough for Zoho to open.
+const QUOTE_MAX = 1500;
+
+// "Răspunde" opens a new email to the sender with their message quoted as a small card
+// below the space for the answer, so the reply does not carry this whole notification
+// along (as the mail client's Reply would). Zoho's compose window reads the body as HTML.
+// The card is part of the email the customer receives, so it is written for them too.
 function replyMailto({ input, receivedAt }: ContactEmailData): string {
-  const quoted = input.message
-    .split("\n")
-    .map((line) => `> ${line}`)
-    .join("\n");
+  const text =
+    input.message.length > QUOTE_MAX ? `${input.message.slice(0, QUOTE_MAX)}…` : input.message;
   const body = [
-    "",
-    "",
-    "",
-    `Pe ${formatRoDate(receivedAt)}, ${input.name} a scris:`,
-    `> Subiect: „${input.subject}”`,
-    ">",
-    quoted,
-  ].join("\n");
+    "<p><br></p><p><br></p><p><br></p>",
+    `<div style="margin-top:24px;max-width:560px;border:1px solid ${LINE};border-radius:12px;padding:18px 20px;font-family:${SANS};">`,
+    `<div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${MUTED};">Mesaj trimis prin hartiromania.ro</div>`,
+    `<div style="font-size:13px;color:${MUTED};padding-top:4px;">${escapeHtml(input.name)} · ${escapeHtml(formatRoDate(receivedAt))}</div>`,
+    `<div style="font-size:16px;font-weight:600;color:${INK};padding:14px 0 8px;">${escapeHtml(input.subject)}</div>`,
+    `<div style="border-left:2px solid ${INK};padding-left:14px;font-size:14px;line-height:1.6;color:#3f3f46;">${escapeHtml(text).replace(/\n/g, "<br>")}</div>`,
+    "</div>",
+  ].join("");
   return `mailto:${encodeURIComponent(input.email)}?subject=${encodeURIComponent(`Re: ${input.subject}`)}&body=${encodeURIComponent(body)}`;
 }
 
@@ -83,7 +86,9 @@ export function contactEmailHtml(data: ContactEmailData): string {
   const email = escapeHtml(input.email);
   const subject = escapeHtml(input.subject);
   const message = escapeHtml(input.message).replace(/\n/g, "<br>");
-  const replyHref = replyMailto(data);
+  // Opens Zoho Mail's compose window directly (the address Zoho itself uses for mailto
+  // links), so it works without setting Zoho as the browser's mail handler.
+  const replyHref = `https://mail.zoho.eu/zm/comp.do?ct=${encodeURIComponent(replyMailto(data))}`;
   const label = `font-family:${SANS};font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${MUTED};`;
 
   const row = (key: string, value: string, mono = false) => `
