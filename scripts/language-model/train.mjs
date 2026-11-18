@@ -1,15 +1,14 @@
-// Trains the letter model used by the contact-form spam filter (lib/contact/spam-score.ts).
+// Trains the letter model used by the contact-form spam filter (lib/contact/language-model.ts).
 //
 // It reads real text: every blog article (Zenblog), every product and promo text (Sanity)
-// and a short English sample, then counts which letter follows which inside words.
-// Real words follow those habits; random keyboard strings ("svjbsd", "xjj") do not.
+// and a short English sample, then counts every group of three letters inside words
+// ("har", "art", "rta"...). Real words are built from groups that occur all the time;
+// random typing ("wwefewrg", "svjbsd") is built from groups that almost never occur.
 //
 // Run again whenever the site has a lot of new text:
 //   node --env-file=.env.local scripts/language-model/train.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 
-const ALPHABET = "^abcdefghijklmnopqrstuvwxyz$"; // ^ = word start, $ = word end
-const SMOOTHING = 0.1;
 const OUTPUT = new URL("../../lib/contact/language-model.json", import.meta.url);
 
 function words(text) {
@@ -60,35 +59,17 @@ const corpus = [
 ].join(" ");
 const all = words(corpus);
 
-// Count letter pairs, with word boundaries, then turn them into log-probabilities.
-const size = ALPHABET.length;
-const counts = Array.from({ length: size }, () => new Array(size).fill(0));
+// "^^" marks the start of a word and "$" its end, so "harta" gives
+// ^^h ^ha har art rta ta$.
+const trigrams = {};
 for (const word of all) {
-  const chars = `^${word}$`;
-  for (let i = 0; i < chars.length - 1; i++) {
-    counts[ALPHABET.indexOf(chars[i])][ALPHABET.indexOf(chars[i + 1])]++;
+  const chars = `^^${word}$`;
+  for (let i = 0; i < chars.length - 2; i++) {
+    const key = chars.slice(i, i + 3);
+    trigrams[key] = (trigrams[key] ?? 0) + 1;
   }
 }
-const logp = counts.map((row) => {
-  const total = row.reduce((a, b) => a + b, 0) + SMOOTHING * size;
-  return row.map((c) => Number(Math.log((c + SMOOTHING) / total).toFixed(2)));
-});
 
-// Calibrate: the score below which only ~1% of real words fall.
-const score = (word) => {
-  const chars = `^${word}$`;
-  let sum = 0;
-  for (let i = 0; i < chars.length - 1; i++) {
-    sum += logp[ALPHABET.indexOf(chars[i])][ALPHABET.indexOf(chars[i + 1])];
-  }
-  return sum / (chars.length - 1);
-};
-const unique = [...new Set(all.filter((w) => w.length >= 3))];
-const sorted = unique.map(score).sort((a, b) => a - b);
-const threshold = Number(sorted[Math.floor(sorted.length * 0.01)].toFixed(2));
-
-writeFileSync(OUTPUT, `${JSON.stringify({ alphabet: ALPHABET, threshold, logp })}\n`);
-console.log(`trained on ${all.length} words (${unique.length} distinct), threshold ${threshold}`);
-for (const sample of ["harta", "romania", "shipping", "thanks", "svjbsd", "sdsb", "sdg", "xjj"]) {
-  console.log(`  ${sample.padEnd(10)} ${score(sample).toFixed(2)}`);
-}
+const sorted = Object.fromEntries(Object.entries(trigrams).sort(([a], [b]) => (a < b ? -1 : 1)));
+writeFileSync(OUTPUT, `${JSON.stringify({ words: all.length, trigrams: sorted })}\n`);
+console.log(`trained on ${all.length} words, ${Object.keys(sorted).length} letter groups`);

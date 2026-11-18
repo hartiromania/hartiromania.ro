@@ -208,3 +208,81 @@ for (const message of nonsense) {
     assert.equal(analyzeMessage({ ...base, message }, signals).verdict, "suspect");
   });
 }
+
+// Calibration set: realistic messages from customers (names, places, brands, typos,
+// other languages, very short) and typed nonsense, fully or partly.
+const calibrationHuman = [
+  ["Ion Popescu", "Comandă", "Bună ziua, aș dori harta României Mari. Mulțumesc!"],
+  ["Maria", "Preț", "Cât costă?"],
+  [
+    "Gheorghe",
+    "harta",
+    "buna seara as vrea harta cu judetele vechi pt bunicul meu, cat costa cu transport?",
+  ],
+  [
+    "Wojciech Szczepański",
+    "Order",
+    "Hello, I would like to buy the big map. Is shipping to Gdansk possible?",
+  ],
+  ["Nguyen Van Anh", "Question", "Do you ship to Vietnam? Thanks"],
+  ["Hans Schmidt", "Bestellung", "Guten Tag, ich möchte eine Karte bestellen. Danke!"],
+  ["Kovács Péter", "Térkép", "Jó napot, szeretnék egy térképet rendelni Kolozsvárra"],
+  ["Andrei", "re: comanda 4521", "am platit prin iban la BCR, va rog confirmati"],
+  ["Cristina", "Factură", "Bună, putem primi factură pe SRL? CUI RO123456."],
+  [
+    "Mihai",
+    "colaborare",
+    "Salut! Avem o librărie în Brașov, ne-ar interesa hărțile voastre. Sunați-mă la 0745 123 456.",
+  ],
+  ["Elena", "Mulțumesc", "ok mersi"],
+  ["Radu", "Livrare", "Coletul nu a ajuns inca, AWB 1234567890 Fan Courier. Ma puteti ajuta?"],
+  ["Ana-Maria Ionescu", "Cadou", "Vreau sa fac cadou harta Daciei, se poate cu felicitare?"],
+  ["George", "intrebare", "Aveti si harti cu Transilvania din 1900? Sau cu Bucovina?"],
+  ["Ioana", "Mulțumiri", "Harta a ajuns perfect, e superbă! Vă mulțumesc din suflet 🙏"],
+  ["Paul", "eMAG", "Am comandat de pe eMAG si vreau sa schimb adresa, se mai poate?"],
+  ["Vlad", "Whatsapp", "Ma puteti contacta pe WhatsApp? Nu prea folosesc emailul."],
+  ["Dan", "pret", "pret?"],
+  ["Sorin", "Buna", "Salut"],
+  ["Luca", "Test", "test"],
+  ["Alex", "harta", "mutlumesc pt raspuns, astept harta"],
+  ["Irina", "Comanda", "Buna ziua, vreau 2 buc din harta mare si 1 carte. Plata ramburs."],
+  ["Tudor", "Info", "Ce dimensiuni are poster-ul? 70x100 cm?"],
+  ["Bogdan", "Instagram", "V-am văzut pe Instagram și TikTok, super proiect!"],
+  ["Matei", "Iași", "Livrați și în Iași, Suceava sau Botoșani?"],
+];
+const calibrationJunk = [
+  ["Jony", "Cefaceti dgsgs", "sdc wwefewrg Test este bine"],
+  ["John", "Test xjj", "svjbsd sdsb sdg"],
+  ["sfasfa", "sdfsfsdf", "sfasfas"],
+  ["Ana", "Info", "ghj"],
+  ["Ion", "Mesaj", "asdasd"],
+  ["Ion", "Mesaj", "Hello sdfsdf jhgjhg"],
+  ["Maria", "hello", "qwpo zxkq mnbv trwq"],
+  ["dfgdfg", "fghfgh", "jkljkl hjkhjk"],
+  ["pVrWyZkADOffKkYhEDHH", "sTnpUimWcKqFiFvAsgQo", "ytOtKrgEQwpdndUXQBMk"],
+  ["Test", "test", "buna ziua sdfgsdfg dfgdfg"],
+  ["Mihai", "Comanda", "vreau harta kjhkjh lkjlkj"],
+  ["aaa", "aaa", "aaaaaaa"],
+  ["Ion", "Salut", "test test xcvxcv"],
+  ["Gigel", "Intrebare", "dsfsdf sdfsdf sdfsdf"],
+  ["Alex", "Buna", "Buna ziua dgfdgfdg"],
+];
+const asInput = ([name, subject, message]: string[]): ContactInput => ({
+  name,
+  email: "x@gmail.com",
+  subject,
+  message,
+});
+
+for (const sample of calibrationHuman) {
+  test(`calibration, real: ${sample[2]}`, () => {
+    const result = check(asInput(sample));
+    assert.equal(result.verdict, "ok", `score ${result.score}: ${result.reasons.join("; ")}`);
+  });
+}
+for (const sample of calibrationJunk) {
+  test(`calibration, nonsense: ${sample[2]}`, () => {
+    const result = check(asInput(sample));
+    assert.equal(result.verdict, "suspect", `score ${result.score}: ${result.reasons.join("; ")}`);
+  });
+}
