@@ -5,7 +5,13 @@
       "name": "hartiromania-dev",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev"],
-      "port": 3000
+      "port": 3010
+    },
+    {
+      "name": "hartiromania-prod",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["start"],
+      "port": 3010
     }
   ]
 }

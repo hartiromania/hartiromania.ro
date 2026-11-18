@@ -2,7 +2,8 @@
 
 import type React from "react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Script from "next/script";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,26 @@ const TelegramIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        container: HTMLElement,
+        options: {
+          sitekey: string;
+          appearance?: "always" | "execute" | "interaction-only";
+          language?: string;
+          "error-callback"?: (code: string) => boolean;
+        },
+      ) => string | undefined;
+      reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
+    };
+  }
+}
+
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -31,13 +52,37 @@ export default function ContactPage() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  // Anti-spam signals: when the form appeared and the Cloudflare Turnstile widget.
+  const startedAt = useRef<number | null>(null);
+  const turnstileBox = useRef<HTMLDivElement>(null);
+  const turnstileId = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    startedAt.current = Date.now();
+    return () => {
+      if (turnstileId.current) window.turnstile?.remove(turnstileId.current);
+    };
+  }, []);
+
+  const renderTurnstile = () => {
+    if (!TURNSTILE_SITE_KEY || !turnstileBox.current || turnstileId.current) return;
+    turnstileId.current = window.turnstile?.render(turnstileBox.current, {
+      sitekey: TURNSTILE_SITE_KEY,
+      appearance: "interaction-only",
+      language: "ro",
+      // A failed check must not break the page: the message is still sent, and the
+      // server counts the missing token in the spam score.
+      "error-callback": () => true,
+    });
+  };
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error" | null;
     message: string;
   }>({ type: null, message: "" });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const fields = new FormData(e.currentTarget);
     setIsLoading(true);
     setSubmitStatus({ type: null, message: "" });
 
@@ -47,7 +92,12 @@ export default function ContactPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          website: fields.get("website") ?? "",
+          elapsedMs: startedAt.current ? Date.now() - startedAt.current : null,
+          turnstileToken: fields.get("cf-turnstile-response") ?? "",
+        }),
       });
 
       const result = await response.json();
@@ -77,6 +127,8 @@ export default function ContactPage() {
       });
     } finally {
       setIsLoading(false);
+      // A Turnstile token works once; get a fresh one for a possible next message.
+      if (turnstileId.current) window.turnstile?.reset(turnstileId.current);
     }
   };
 
@@ -89,6 +141,13 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen">
+      {TURNSTILE_SITE_KEY && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          strategy="afterInteractive"
+          onReady={renderTurnstile}
+        />
+      )}
       <Header />
 
       {/* Hero Section */}
@@ -211,6 +270,23 @@ export default function ContactPage() {
                       disabled={isLoading}
                     />
                   </div>
+
+                  {/* Trap for bots: hidden from people and screen readers, bots fill it in. */}
+                  <div
+                    aria-hidden="true"
+                    className="absolute -left-[9999px] h-px w-px overflow-hidden"
+                  >
+                    <label htmlFor="website">Website</label>
+                    <input
+                      id="website"
+                      name="website"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                    />
+                  </div>
+
+                  <div ref={turnstileBox} />
 
                   <Button
                     type="submit"
