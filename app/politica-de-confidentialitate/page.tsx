@@ -34,7 +34,7 @@ export default function PrivacyPolicyPage() {
           <strong>Newsletter:</strong> emailul și, dacă îl scrii, numele. Până te dezabonezi.
         </li>
         <li>
-          <strong>Cookie-uri de analiză:</strong> date despre cum este folosit site-ul, doar cu
+          <strong>Măsurarea audienței:</strong> date despre cum este folosit site-ul, doar cu
           acordul tău. Cel mult 14 luni. Detalii în{" "}
           <Link href="/politica-cookies">Politica de cookie-uri</Link>.
         </li>
@@ -48,9 +48,9 @@ export default function PrivacyPolicyPage() {
         </li>
       </ul>
       <p>
-        Le prelucrăm pe baza acordului tău (newsletter, analiză), a cererii tale (mesaje), a
-        interesului nostru legitim de a proteja site-ul și a obligației legale de a putea dovedi
-        acordul.
+        Le prelucrăm pe baza acordului tău (newsletter, măsurarea audienței), a cererii tale
+        (mesaje), a interesului nostru legitim de a proteja site-ul și a obligației legale de a
+        putea dovedi acordul.
       </p>
       <p>
         Comenzile se plasează pe eMAG, care prelucrează datele de comandă, plată și livrare conform

@@ -130,7 +130,7 @@ export function CookieConsent() {
           </div>
           <label className="flex cursor-pointer items-start justify-between gap-4 py-3 md:py-0">
             <span>
-              <span className="text-foreground block font-semibold">Analiză</span>
+              <span className="text-foreground block font-semibold">Măsurarea audienței</span>
               <span className="text-muted-foreground block text-base leading-snug">
                 Ne arată, în mod agregat, cum este folosit site-ul, ca să îl putem îmbunătăți.
               </span>
@@ -203,7 +203,7 @@ export function ConsentDetails() {
     <div className="border-border bg-card rounded-md border p-4 text-lg">
       <p>
         {consent
-          ? `Ai ${consent.statistics ? "acceptat" : "refuzat"} cookie-urile de analiză pe ${SAVED_AT.format(consent.savedAt)}.`
+          ? `Ai ${consent.statistics ? "acceptat" : "refuzat"} măsurarea audienței pe ${SAVED_AT.format(consent.savedAt)}.`
           : "Nu ai ales încă nimic pe acest dispozitiv."}
       </p>
       <CookieSettingsButton className="bg-accent-orange text-accent-orange-foreground hover:bg-accent-orange-dark mt-3 inline-flex h-11 cursor-pointer items-center rounded-md px-5 text-base font-semibold" />
