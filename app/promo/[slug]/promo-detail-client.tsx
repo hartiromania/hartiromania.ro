@@ -11,12 +11,20 @@ import {
   CarouselThumbnails,
 } from "@/components/ui/carousel";
 import { ImageMagnifier } from "@/components/image-magnifier";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { itemParams, track } from "@/lib/analytics";
 import type { PromoPackage } from "@/lib/types";
 
 export function PromoDetailClient({ promoPackage }: { promoPackage: PromoPackage }) {
+  useEffect(() => {
+    track("view_item", itemParams(promoPackage));
+  }, [promoPackage]);
+
+  const trackOrderClick = () =>
+    track("click_emag", { ...itemParams(promoPackage), link_url: promoPackage.orderLink ?? "" });
+
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showBonusPopup, setShowBonusPopup] = useState(false);
   const [selectedBonusImage, setSelectedBonusImage] = useState<string | null>(null);
@@ -104,7 +112,12 @@ export function PromoDetailClient({ promoPackage }: { promoPackage: PromoPackage
 
             <div className="block lg:hidden">
               {promoPackage.orderLink ? (
-                <Link href={promoPackage.orderLink} target="_blank" rel="noopener noreferrer">
+                <Link
+                  href={promoPackage.orderLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={trackOrderClick}
+                >
                   <Button
                     size="lg"
                     className="bg-accent-orange hover:bg-accent-orange-dark text-accent-orange-foreground w-full cursor-pointer py-6 text-xl font-semibold"
@@ -165,7 +178,12 @@ export function PromoDetailClient({ promoPackage }: { promoPackage: PromoPackage
 
             <div className="hidden lg:block">
               {promoPackage.orderLink ? (
-                <Link href={promoPackage.orderLink} target="_blank" rel="noopener noreferrer">
+                <Link
+                  href={promoPackage.orderLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={trackOrderClick}
+                >
                   <Button
                     size="lg"
                     className="bg-accent-orange hover:bg-accent-orange-dark text-accent-orange-foreground w-64 cursor-pointer self-start py-6 text-xl font-semibold"

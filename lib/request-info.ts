@@ -74,6 +74,17 @@ export function visitorOf(headers: Headers) {
   };
 }
 
+/** IPv4 → a.b.c.0, IPv6 → first three groups + "::". Proof without identifying anyone. */
+export function maskIp(ip: string | undefined): string | null {
+  if (!ip) return null;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) return ip.replace(/\.\d{1,3}$/, ".0");
+  if (ip.includes(":")) {
+    const groups = ip.split("::")[0].split(":").filter(Boolean).slice(0, 3);
+    return `${groups.join(":")}::`;
+  }
+  return null;
+}
+
 export function deviceOf(userAgent: string | null): string {
   if (!userAgent) return "necunoscut";
   const os = /iPhone|iPad/.test(userAgent)

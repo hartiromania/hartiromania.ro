@@ -3,6 +3,7 @@ import { Facebook, Instagram, Twitter } from "@/components/brand-icons";
 import Image from "next/image";
 import { navigationItems } from "@/lib/navigation";
 import { NewsletterForm } from "@/components/newsletter-form";
+import { CookieSettingsButton } from "@/components/cookie-consent";
 
 const TelegramIcon = ({ className }: { className?: string }) => (
   <svg
@@ -186,6 +187,24 @@ export function Footer() {
             <p className="text-muted-foreground font-medium md:text-xl">
               © {new Date().getFullYear()} Hărți România. Toate drepturile rezervate.
             </p>
+            <nav
+              aria-label="Informații legale"
+              className="text-muted-foreground mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 text-base md:text-lg"
+            >
+              <Link
+                href="/politica-de-confidentialitate"
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
+                Politica de confidențialitate
+              </Link>
+              <Link
+                href="/politica-cookies"
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
+                Politica de cookie-uri
+              </Link>
+              <CookieSettingsButton className="hover:text-foreground cursor-pointer underline-offset-2 hover:underline" />
+            </nav>
             <p className="text-muted-foreground mt-3 text-base">
               Created by{" "}
               <Link

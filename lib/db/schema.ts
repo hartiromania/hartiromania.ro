@@ -66,6 +66,29 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/** Proof of consent: one row per cookie choice a visitor makes (GDPR art. 7(1)). */
+export const consentRecords = pgTable(
+  "consent_records",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** The random ID kept in the visitor's cookie; the same for every change they make. */
+    consentId: uuid("consent_id").notNull(),
+    statistics: boolean("statistics").notNull(),
+    version: integer("version").notNull(),
+    source: text("source", { enum: ["banner", "settings"] }).notNull(),
+    page: text("page"),
+    /** Last part masked (IPv4 /24, IPv6 /48): enough as proof, not enough to identify. */
+    ipMasked: text("ip_masked"),
+    location: text("location"),
+    device: text("device"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("consent_records_created_idx").on(t.createdAt),
+    index("consent_records_consent_idx").on(t.consentId),
+  ],
+);
+
 /** Messages from the contact form, spam included (verdict "suspect"). */
 export const contactMessages = pgTable(
   "contact_messages",

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Facebook, Instagram, Twitter } from "@/components/brand-icons";
+import { track } from "@/lib/analytics";
 import { Turnstile, type TurnstileHandle } from "@/components/turnstile";
 
 const TelegramIcon = ({ className }: { className?: string }) => (
@@ -68,6 +69,7 @@ export default function ContactPage() {
       const result = await response.json();
 
       if (response.ok) {
+        track("contact_form_submit");
         setSubmitStatus({
           type: "success",
           message: result.message || "Mesajul a fost trimis cu succes!",
