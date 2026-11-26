@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { usePathname } from "next/navigation";
+import { CookieConsent } from "@/components/cookie-consent";
 import { NewsletterPopup } from "@/components/newsletter-popup";
 
 function ScrollToTop() {
@@ -88,6 +89,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <ContentProtection />
       {children}
       <NewsletterPopup />
+      <CookieConsent />
     </>
   );
 }

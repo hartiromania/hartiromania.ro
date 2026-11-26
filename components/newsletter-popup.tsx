@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
+import { readConsent } from "@/lib/consent";
 import { NewsletterForm } from "./newsletter-form";
 
 const STORAGE_KEY = "hr-newsletter-popup-state";
@@ -61,6 +62,8 @@ export function NewsletterPopup() {
     const timer = setTimeout(() => {
       if (!isActive) return;
       if (shouldSuppressPopup(readState())) return;
+      // Never on top of the cookie banner: wait until the visitor has made a choice.
+      if (!readConsent()) return;
       setIsOpen(true);
     }, DELAY_MS);
 

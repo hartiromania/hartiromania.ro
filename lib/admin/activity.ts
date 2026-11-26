@@ -27,6 +27,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/login": "Conectare",
   "/login/confirm": "Confirmare conectare",
   "/messages": "Mesaje",
+  "/cookies": "Cookie-uri",
   "/settings": "Setări",
   "/security": "Securitate",
   "/journal": "Jurnal",

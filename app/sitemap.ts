@@ -20,6 +20,8 @@ const STATIC_PAGES: { path: string; priority: number }[] = [
   { path: "/despre", priority: 0.5 },
   { path: "/video", priority: 0.4 },
   { path: "/contact", priority: 0.4 },
+  { path: "/politica-de-confidentialitate", priority: 0.2 },
+  { path: "/politica-cookies", priority: 0.2 },
 ];
 
 const toImages = (images?: (string | null)[] | null) =>

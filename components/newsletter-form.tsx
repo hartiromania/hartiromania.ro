@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { Loader2, CheckCircle2, AlertCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 export type NewsletterFormVariant = "footer" | "card" | "popup";
@@ -60,6 +61,7 @@ export function NewsletterForm({
 
       setStatus("success");
       setMessage(data?.message || "Mulțumim! Ești acum abonat.");
+      track("newsletter_signup", { source });
       setEmail("");
       setName("");
       if (onSuccess) onSuccess();

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { sortProductsByUploadOrder } from "@/lib/search-utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { itemParams, track } from "@/lib/analytics";
 import type { Product } from "@/lib/types";
 
 export function ProductDetailClient({
@@ -27,6 +28,10 @@ export function ProductDetailClient({
 }) {
   const category = product.category;
   const slug = product.slug;
+
+  useEffect(() => {
+    track("view_item", itemParams(product));
+  }, [product]);
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showBonusPopup, setShowBonusPopup] = useState(false);
@@ -133,6 +138,12 @@ export function ProductDetailClient({
                 {product.orderLink ? (
                   <Link
                     href={product.orderLink}
+                    onClick={() =>
+                      track("click_emag", {
+                        ...itemParams(product),
+                        link_url: product.orderLink ?? "",
+                      })
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full lg:w-auto"

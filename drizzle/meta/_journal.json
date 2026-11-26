@@ -15,6 +15,13 @@
       "when": 1795000255610,
       "tag": "0001_loose_switch",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795686597689,
+      "tag": "0002_rare_cardiac",
+      "breakpoints": true
     }
   ]
 }

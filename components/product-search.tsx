@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { track } from "@/lib/analytics";
 
 interface ProductSearchProps {
   value: string;
@@ -18,6 +20,14 @@ export function ProductSearch({
   showAdvancedSearch = false,
   onAdvancedSearch,
 }: ProductSearchProps) {
+  // One "search" event per finished query, not one per keystroke.
+  useEffect(() => {
+    const term = value.trim();
+    if (term.length < 2) return;
+    const timer = setTimeout(() => track("search", { search_term: term }), 1500);
+    return () => clearTimeout(timer);
+  }, [value]);
+
   return (
     <div className="w-full">
       <div className="ml-auto max-w-sm">
