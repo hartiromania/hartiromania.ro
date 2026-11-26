@@ -40,9 +40,9 @@ function useConsent() {
 }
 
 const primary =
-  "bg-accent-orange text-accent-orange-foreground hover:bg-accent-orange-dark h-11 w-full text-base font-semibold";
+  "bg-accent-orange text-accent-orange-foreground hover:bg-accent-orange-dark h-11 w-full text-base font-semibold md:w-auto md:px-6";
 const secondary =
-  "border-accent-orange text-accent-orange hover:bg-accent-orange/10 h-11 w-full text-base font-semibold";
+  "border-accent-orange text-accent-orange hover:bg-accent-orange/10 h-11 w-full text-base font-semibold md:w-auto md:px-6";
 
 // Cookie banner: asks while there is no valid choice, applies the stored one on every
 // visit, and reopens from "Setări cookie". Refusing is as easy as accepting.
@@ -100,14 +100,14 @@ export function CookieConsent() {
         // the visitor has to answer (no silent "accept" by dismissing).
         if (e.key === "Escape" && !banner && consent) setSettingsOpen(false);
       }}
-      className={`border-border bg-card text-card-foreground animate-in fade-in slide-in-from-bottom-4 fixed inset-x-3 bottom-3 z-[110] mx-auto rounded-lg border p-5 shadow-xl duration-300 outline-none md:bottom-5 ${banner ? "max-w-[21rem]" : "max-w-[24rem]"}`}
+      className="border-border bg-card text-card-foreground animate-in fade-in slide-in-from-bottom-4 fixed inset-x-3 bottom-3 z-[110] mx-auto max-w-5xl rounded-lg border p-5 shadow-xl duration-300 outline-none md:bottom-5 md:flex md:items-center md:gap-8 md:px-6 md:py-4"
     >
-      <h2 id={titleId} className="text-foreground text-xl font-bold">
+      <h2 id={titleId} className="text-foreground text-xl font-bold md:sr-only">
         {banner ? "Cookie-uri" : "Preferințe cookie"}
       </h2>
 
       {banner ? (
-        <p className="text-muted-foreground mt-1.5 text-base leading-relaxed">
+        <p className="text-muted-foreground mt-1.5 text-base leading-relaxed md:mt-0 md:flex-1">
           Folosim cookie-uri ca site-ul să funcționeze și, cu acordul tău, ca să înțelegem cum este
           folosit.{" "}
           <Link
@@ -118,8 +118,8 @@ export function CookieConsent() {
           </Link>
         </p>
       ) : (
-        <div className="border-border divide-border mt-3 divide-y border-y">
-          <div className="flex items-start justify-between gap-4 py-3">
+        <div className="border-border divide-border mt-3 divide-y border-y md:mt-0 md:grid md:flex-1 md:grid-cols-2 md:gap-8 md:divide-y-0 md:border-0">
+          <div className="flex items-start justify-between gap-4 py-3 md:py-0">
             <div>
               <p className="text-foreground font-semibold">Strict necesare</p>
               <p className="text-muted-foreground text-base leading-snug">
@@ -128,7 +128,7 @@ export function CookieConsent() {
             </div>
             <span className="text-muted-foreground shrink-0 pt-0.5 text-sm">Mereu active</span>
           </div>
-          <label className="flex cursor-pointer items-start justify-between gap-4 py-3">
+          <label className="flex cursor-pointer items-start justify-between gap-4 py-3 md:py-0">
             <span>
               <span className="text-foreground block font-semibold">Analiză</span>
               <span className="text-muted-foreground block text-base leading-snug">
@@ -156,9 +156,16 @@ export function CookieConsent() {
         </div>
       )}
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="mt-4 grid grid-cols-2 gap-2 md:mt-0 md:flex md:shrink-0 md:items-center">
         {banner ? (
           <>
+            <button
+              type="button"
+              onClick={openSettings}
+              className="text-muted-foreground hover:text-foreground order-last col-span-2 py-1.5 text-base underline underline-offset-2 md:order-first md:px-3"
+            >
+              Personalizează
+            </button>
             <Button variant="outline" onClick={() => choose(false)} className={secondary}>
               Refuz
             </Button>
@@ -177,15 +184,6 @@ export function CookieConsent() {
           </>
         )}
       </div>
-      {banner && (
-        <button
-          type="button"
-          onClick={openSettings}
-          className="text-muted-foreground hover:text-foreground mt-2 w-full py-1.5 text-base underline underline-offset-2"
-        >
-          Personalizează
-        </button>
-      )}
     </div>
   );
 }
