@@ -30,17 +30,17 @@ export default function CookiePolicyPage() {
           mereu active.
         </li>
         <li>
-          <strong>Măsurarea audienței:</strong> doar cu acordul tău. Ne arată, în mod agregat, cum
-          este folosit site-ul. Pentru asta folosim Google Analytics, ale cărui cookie-uri rămân cel
-          mult 2 ani.
+          <strong>Statistici:</strong> doar cu acordul tău. Ne arată, în mod agregat, cum este
+          folosit site-ul. Pentru asta folosim Google Analytics, ale cărui cookie-uri rămân cel mult
+          2 ani.
         </li>
       </ul>
 
       <h2>Cum îți schimbi alegerea</h2>
       <p>
         Oricând, din „Setări cookie”, jos în orice pagină. Dacă retragi acordul, ștergem
-        cookie-urile de măsurare a audienței din browserul tău. Poți bloca cookie-urile și din
-        setările browserului.
+        cookie-urile de statistici din browserul tău. Poți bloca cookie-urile și din setările
+        browserului.
       </p>
 
       <p>
