@@ -57,7 +57,7 @@ export default async function CookiesPage({
       </form>
       {rawId && !validId && (
         <p role="alert" className="mb-4 text-sm text-(--danger)">
-          ID-ul nu are forma corectă. Îl găsește vizitatorul pe pagina „Politica de cookie-uri”.
+          ID-ul nu are forma corectă.
         </p>
       )}
 
