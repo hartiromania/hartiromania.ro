@@ -100,7 +100,7 @@ export function CookieConsent() {
         // the visitor has to answer (no silent "accept" by dismissing).
         if (e.key === "Escape" && !banner && consent) setSettingsOpen(false);
       }}
-      className={`border-border bg-card text-card-foreground animate-in fade-in slide-in-from-bottom-4 fixed inset-x-3 bottom-3 z-[110] rounded-lg border p-5 shadow-xl duration-300 outline-none md:inset-x-auto md:bottom-5 md:left-5 ${banner ? "md:w-[26rem]" : "md:w-[30rem]"}`}
+      className={`border-border bg-card text-card-foreground animate-in fade-in slide-in-from-bottom-4 fixed inset-x-3 bottom-3 z-[110] mx-auto rounded-lg border p-5 shadow-xl duration-300 outline-none md:bottom-5 ${banner ? "max-w-[21rem]" : "max-w-[24rem]"}`}
     >
       <h2 id={titleId} className="text-foreground text-xl font-bold">
         {banner ? "Cookie-uri" : "Preferințe cookie"}
